@@ -1,4 +1,3 @@
-```markdown
 # Basics of DevOps
 
 ## What is DevOps
@@ -150,4 +149,3 @@ Runtime application self-protection (RASP) discovers and stops inbound security 
 A specialised internal or external team can conduct penetration testing to identify exploits or vulnerabilities by compromising a system on purpose. Offering a bug bounty program that compensates external individuals who reveal security exploits and flaws is another security measure.
 
 Using analytics, security monitoring instruments monitor crucial security-related variables. These tools, for instance, mark requests to sensitive public endpoints, such as user account access forms and database endpoints. Popular runtime defensive instruments include Imperva RASP, Alert Logic, and Halo.
-```
