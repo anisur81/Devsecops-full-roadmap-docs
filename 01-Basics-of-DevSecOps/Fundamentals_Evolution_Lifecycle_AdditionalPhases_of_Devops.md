@@ -151,5 +151,3 @@ A specialised internal or external team can conduct penetration testing to ident
 
 Using analytics, security monitoring instruments monitor crucial security-related variables. These tools, for instance, mark requests to sensitive public endpoints, such as user account access forms and database endpoints. Popular runtime defensive instruments include Imperva RASP, Alert Logic, and Halo.
 ```
-
-You can copy this directly into a `.md` file and it will render correctly in any Markdown viewer (GitHub, GitLab, VS Code, etc.).
