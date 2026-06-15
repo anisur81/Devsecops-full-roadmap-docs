@@ -1,0 +1,537 @@
+#2.3.1 A Complete Linux commands list That Every DevOps Engineer Should Know for File_Directory Text Networking Package System Services process 
+
+As a DevOps engineer, mastering certain Linux commands is essential for efficient system administration, automation, and troubleshooting. Here are some crucial Linux commands that every DevOps engineer should know:
+
+## 1. File and Directory Management
+
+### `ls`
+List files and directories.
+
+### `cd`
+Change the current directory.
+
+### `pwd`
+Print the current working directory.
+
+### `mkdir`
+Create a new directory.
+
+```bash
+mkdir -p /orafs/app/oracle/product
+```
+
+### `rm`
+Remove files and directories.
+
+```bash
+rm filename
+rm -rf foldername
+```
+
+### `cp`
+Copy files and directories.
+
+In Linux, if you wanted to make a copy of `/directory1` and place it inside `/directory2`, you would use:
+
+```bash
+cp -R /directory1 /directory2
+```
+
+> **Note:** If no `/directory2` exists, a new directory will be created with that name, containing the contents of `/directory1`.
+
+To copy multiple files into a single directory:
+
+```bash
+cp -R file1.txt file2.txt file3.txt /directory1
+```
+
+To copy the entire contents of `/directory1` into `/directory2` (duplicating files inside the folder but not the folder itself):
+
+```bash
+cp -R /directory1/* /directory2
+```
+
+### `mv`
+Move or rename files and directories.
+
+To move `/directory1` into `/directory2`:
+
+```bash
+mv /directory1 /directory2
+```
+
+> **Note:** If no `/directory2` exists, `/directory1` will be renamed as `/directory2`.
+
+To move multiple files:
+
+```bash
+mv file1.txt file2.txt file3.txt /home/directory1
+```
+
+### `find`
+Search for files and directories.
+
+**Basic syntax:**
+```bash
+find [starting_directory] [options] [filename/pattern]
+```
+
+**Common options:**
+- `-type f`: Search for regular files only
+- `-type d`: Search for directories only
+- `-name "filename"`: Search for files with exact name
+- `-iname "filename"`: Case-insensitive search
+- `-mtime +n`: Find files modified more than "n" days ago
+
+**Examples:**
+
+Find all files named "log.txt" in current directory and subdirectories:
+```bash
+find . -name "log.txt"
+```
+
+Find all directories named "temp" in `/home`:
+```bash
+find /home -type d -name "temp"
+```
+
+Find all PDF files modified within last week:
+```bash
+find /home/user/documents -type f -name "*.pdf" -mtime -7
+```
+
+Find files containing text "error":
+```bash
+cat /home/oracle/log/log.txt | grep error
+```
+
+Search for hidden files:
+```bash
+find . -type f -name ".*"
+```
+
+Search for log files:
+```bash
+find . -type f -name "*.log"
+```
+
+Search for configuration files:
+```bash
+find . -type f -name "*.conf"
+```
+
+Search files by size (files > 250M):
+```bash
+find / -size +250M
+```
+
+Search files by modification time:
+```bash
+find /path -name "*.txt" -mtime -10   # less than 10 days
+find /path -name "*.txt" -mtime +10   # more than 10 days
+find /path -name "*.txt" -mtime 10    # exactly 10 days
+```
+
+Search files within size range (50MB to 100MB):
+```bash
+find /path/to/search -size +50M -size -100M
+```
+
+Use boolean operators:
+```bash
+find /travelphotos -type f -size +200k -not -iname "*2015*"
+```
+
+**Practical bash script example:**
+```bash
+#!/bin/bash
+# Script to move logs older than 7 days to backup
+
+# Move ESB01 logs to backup
+find /logs/esb01/audit -name "*.tar.gz" -mtime +7 -exec mv {} app/backup_logs/ESB01/ \;
+
+# Remove logs from backup path after 30 days
+find /app/backup_logs/ESB01 -name "*.tar.gz" -mtime +30 -exec rm {} \;
+```
+
+### `chmod`
+Change file permissions.
+
+```bash
+chmod -R 775 /orafs/app/oracle
+```
+
+### `chown`
+Change file ownership.
+
+```bash
+chown -R oracle:oinstall /orafs
+```
+
+### `chgrp`
+Change file group ownership.
+
+```bash
+chgrp [GROUP_NAME] [DIRECTORY_NAME]
+chgrp phoenixnap example
+```
+
+Change group ownership of multiple files:
+```bash
+chgrp developers file1.txt file2.txt file3.txt
+```
+
+Hide errors with `-f`:
+```bash
+sudo chgrp -f [GROUP_NAME] [DIRECTORY/FILE_NAME]
+```
+
+Display execution details:
+```bash
+chgrp -c -R [GROUP_NAME] [DIRECTORY/FILE_NAME]
+```
+
+Change group ownership to match a reference file:
+```bash
+chgrp --reference=[RFILE_NAME] [FILE_NAME]
+```
+
+Recursively change group ownership:
+```bash
+chgrp -R [GROUP_NAME] [DIRECTORY_NAME]
+```
+
+## 2. Text Manipulation and Viewing
+
+### `cat`
+Concatenate and display file contents.
+
+### `grep`
+Search for patterns in files.
+
+### `head`
+Display the beginning of a file.
+
+Show first 10 lines (default):
+```bash
+head file-1.txt
+```
+
+Show first N lines:
+```bash
+head -n 5 file-1.txt
+```
+
+Skip last N lines:
+```bash
+head -n -10 file-1.txt
+```
+
+Show first N characters:
+```bash
+head -c 8 file-1.txt
+```
+
+Skip last N characters:
+```bash
+head -c -9 file-1.txt
+```
+
+Show file name in header:
+```bash
+head -n 5 -v file-1.txt
+```
+
+Disable display header:
+```bash
+head -n 3 -q file-1.txt file-2.txt
+```
+
+### `tail`
+Display the end of a file.
+
+```bash
+tail -100f /orafs/log.txt
+```
+
+### `less`
+View file contents interactively.
+
+Open a text file:
+```bash
+less /etc/updatedb.conf
+```
+
+Show line numbers:
+```bash
+less -N /etc/init/mysql.conf
+```
+
+### `sed`
+Stream editor for text manipulation.
+
+**Replace text:**
+```bash
+sed 's/unix/linux/' geekfile.txt
+```
+
+Replace nth occurrence:
+```bash
+sed 's/unix/linux/2' geekfile.txt
+```
+
+Replace all occurrences:
+```bash
+sed 's/unix/linux/g' geekfile.txt
+```
+
+Replace from nth to all occurrences:
+```bash
+sed 's/unix/linux/3g' geekfile.txt
+```
+
+Parenthesize first character of each word:
+```bash
+echo "Welcome To The Geek Stuff" | sed 's/\(\b[A-Z]\)/\(\1\)/g'
+# Output: (W)elcome (T)o (T)he (G)eek (S)tuff
+```
+
+Replace on specific line number:
+```bash
+sed '3 s/unix/linux/' geekfile.txt
+```
+
+Duplicate replaced line with `/p` flag:
+```bash
+sed 's/unix/linux/p' geekfile.txt
+```
+
+Print only replaced lines with `-n`:
+```bash
+sed -n 's/unix/linux/p' geekfile.txt
+```
+
+Replace on range of lines:
+```bash
+sed '1,3 s/unix/linux/' geekfile.txt
+sed '2,$ s/unix/linux/' geekfile.txt
+```
+
+**Delete lines:**
+```bash
+sed '5d' filename.txt          # Delete line 5
+sed '$d' filename.txt          # Delete last line
+sed '3,6d' filename.txt        # Delete lines 3-6
+sed '12,$d' filename.txt       # Delete from line 12 to end
+sed '/abc/d' filename.txt      # Delete lines matching pattern
+```
+
+### `awk`
+Text processing and data extraction tool.
+
+Print second column:
+```bash
+awk '{ print $2 }' filename
+```
+
+Print lines containing 'error':
+```bash
+awk '/error/ { print }' filename
+```
+
+Sum of values in third column:
+```bash
+awk '{ sum += $3 } END { print sum }' filename
+```
+
+Average of values in third column:
+```bash
+awk '{ sum += $3 } END { print sum/NR }' filename
+```
+
+Print lines between two patterns:
+```bash
+awk '/start_pattern/, /end_pattern/' filename
+```
+
+## 3. Process and System Management
+
+### `ps`
+View running processes.
+
+### `top`
+Monitor system resources and processes in real-time.
+
+```
+Tasks: 691 total,   2 running, 467 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.3 us,  0.6 sy,  0.0 ni, 98.7 id,  0.4 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem : 13185781+total,  6283620 free, 17573476 used, 10800072+buff/cache
+KiB Swap: 46874620 total, 46873328 free,     1292 used. 79414304 avail Mem 
+```
+
+### `kill`
+Terminate processes.
+
+```bash
+kill -9 pid
+```
+
+### `systemctl`
+Manage system services.
+
+**System management:**
+```bash
+systemctl reboot                    # Reboot
+systemctl poweroff                  # Shut down
+systemctl get-default               # Display default target
+systemctl set-default graphical.target  # Change to GUI
+systemctl isolate multi-user.target # Switch to multi-user
+systemctl rescue                    # Switch to rescue mode
+```
+
+**Service management:**
+```bash
+systemctl list-units --type=service                    # See all services
+systemctl list-units --type=service --state=active     # List by status
+systemctl list-units --failed                          # List failed services
+systemctl start {servicename}                          # Start a service
+systemctl stop {servicename}                           # Stop a service
+systemctl restart {servicename}                        # Restart a service
+systemctl mask {servicename}                           # Prevent service from starting
+systemctl enable {servicename}                         # Enable service at boot
+systemctl disable {servicename}                        # Disable service at boot
+systemctl is-active {servicename}                      # Confirm active status
+systemctl is-enabled {servicename}                     # Confirm enabled status
+systemctl kill {servicename}                           # Kill with signal 15
+systemctl kill -s 9 {servicename}                      # Kill with signal 9
+```
+
+**Analyze:**
+```bash
+systemd-analyze                     # Report boot time
+systemd-analyze blame               # Display service start times
+```
+
+### `df`
+Display disk space usage.
+
+### `du`
+Estimate file and directory disk usage.
+
+### `free`
+Display system memory usage.
+
+### `uptime`
+Show system uptime and load averages.
+
+## 4. Networking
+
+### `ping`
+Send ICMP echo requests to a host.
+
+### `curl` and `wget`
+Download files from the web.
+
+**curl examples:**
+
+Download a single file:
+```bash
+curl -O http://example.com/logs/20231003.txt
+```
+
+Download and rename:
+```bash
+curl -o log.txt http://example.com/logs/20231003.txt
+```
+
+Download to specific directory:
+```bash
+curl --output-dir /tmp/logs -O http://example.com/logs/20231003.txt
+```
+
+Download multiple files:
+```bash
+curl -O http://example.com/logs/20231003.txt -O http://example.com/logs/20231004.txt
+```
+
+Download via FTP:
+```bash
+curl -u admin:admin -O ftp://ftp.example.com/resources/logs.txt
+```
+
+Resume interrupted download:
+```bash
+curl -C - -O http://example.com/video.mp4
+```
+
+**wget examples:**
+
+Download a single file:
+```bash
+wget http://example.com/logs/20231003.txt
+```
+
+Download and rename:
+```bash
+wget -O log.txt http://example.com/logs/20231003.txt
+```
+
+Download to specific directory:
+```bash
+wget -P /tmp/logs http://example.com/logs/20231003.txt
+```
+
+Download multiple files:
+```bash
+wget http://example.com/logs/20231003.txt http://example.com/logs/20231004.txt
+```
+
+Download recursively:
+```bash
+wget -r http://example.com
+wget -r -l 10 http://example.com    # Set recursion depth
+```
+
+Download via FTP:
+```bash
+wget --ftp-user=admin --ftp-password=admin ftp://ftp.example.com/
+```
+
+Resume interrupted download:
+```bash
+wget -c http://example.com/video.mp4
+```
+
+### `ssh`
+Securely connect to remote systems.
+
+### `scp`
+Securely copy files between systems.
+
+### `netstat`
+Display network statistics and connections.
+
+### `ifconfig` or `ip`
+Network interface configuration.
+
+### `iptables` or `ufw`
+Firewall configuration.
+
+## 5. Package Management
+
+### `apt` (Debian/Ubuntu) or `yum` (CentOS/RHEL)
+Package management commands for installing, updating, and removing software packages.
+
+### `dpkg` (Debian/Ubuntu) or `rpm` (CentOS/RHEL)
+Package management commands for querying package information and managing individual packages.
+
+## 6. Compression and Archiving
+
+### `tar`
+Create and extract tar archives.
+
+### `gzip`, `gunzip`, `bzip2`, `unzip`
+Compress and decompress files.
+
+### `zip`
+Create and extract ZIP archives.
