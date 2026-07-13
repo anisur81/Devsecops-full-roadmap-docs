@@ -17,8 +17,6 @@ Examples:
 http://169.254.169.254/latest/meta-data/
 ```
 
-**Action:** Implement IAM policies and network security groups to restrict access to this metadata.
-
 | Environment           | Metadata Endpoint                           |
 | --------------------- | ------------------------------------------- |
 | AWS EC2               | `http://169.254.169.254/latest/meta-data/`  |
@@ -28,6 +26,7 @@ http://169.254.169.254/latest/meta-data/
 | VMware/KVM/Bare Metal | Usually **none**                            |
 
 ---
+**Action:** Implement IAM policies and network security groups to restrict access to this metadata.
 
 ## Creating Networking Policies To Allow/Deny Access to the Endpoint
 
