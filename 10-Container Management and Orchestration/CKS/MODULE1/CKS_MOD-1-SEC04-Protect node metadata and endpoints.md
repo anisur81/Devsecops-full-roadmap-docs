@@ -205,6 +205,20 @@ metadata:
 In most cases after provisioning the cluster using kops, kubeadm or any other popular tool, the ClusterRole `cluster-admin` already exists in the cluster. We can use it and create only a ClusterRoleBinding for our ServiceAccount. If it does not exist, then you need to create this role first and grant required privileges manually.
 
 ---
+The Default Clusterrole cluster-admin:
+```
+$ kubectl describe clusterrole cluster-admin -n kubernetes-dashboard
+
+Name:         cluster-admin
+Labels:       kubernetes.io/bootstrapping=rbac-defaults
+Annotations:  rbac.authorization.kubernetes.io/autoupdate: true
+PolicyRule:
+  Resources  Non-Resource URLs  Resource Names  Verbs
+  ---------  -----------------  --------------  -----
+  *.*        []                 []              [*]
+             [*]                []              [*]
+```
+Cluster Role Binding named admin-user:
 
 
 ```
