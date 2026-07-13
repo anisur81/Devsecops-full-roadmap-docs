@@ -240,7 +240,7 @@ kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath="{.data.token}
 That's it! You are now logged in as an admin.
 
 
-## Kubernetes Dashboard Example
+## Kubernetes Dashboard RBAC Example
 
 ```
 Dashboard Login
