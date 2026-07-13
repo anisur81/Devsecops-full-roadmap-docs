@@ -219,14 +219,4 @@ kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath="{.data.token}
 
 That's it! You are now logged in as an admin.
 
----
-
-## Security Best Practices Summary
-
-| Area | Recommendation |
-|------|---------------|
-| **Node Metadata** | Restrict access using Network Policies and IAM policies |
-| **Kubelet Configuration** | Use config files instead of command-line flags for easier management |
-| **Dashboard Access** | Do not expose the Kubernetes Dashboard to the internet |
-| **Service Accounts** | Use least privilege principle when creating roles and bindings |
-| **Network Policies** | Default-deny approach, then explicitly allow required access |
+ 
