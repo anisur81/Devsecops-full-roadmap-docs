@@ -149,6 +149,43 @@ kubectl get secrets -n kubernetes-dashboard
 
 ---
 
+## Kubernetes RBAC Architecture
+
+```
+                                Kubernetes API Server
+                                        │
+                                        │
+                                 Authentication
+                                        │
+                                        ▼
+                             ServiceAccount / User
+                                        │
+                                        │
+                              (Who are you?)
+                                        ▼
+                              Authorization (RBAC)
+                                        │
+                    ┌───────────────────┴───────────────────┐
+                    │                                       │
+                    ▼                                       ▼
+             RoleBinding                           ClusterRoleBinding
+                    │                                       │
+                    │                                       │
+                References                              References
+                    │                                       │
+                    ▼                                       ▼
+                 Role                              ClusterRole
+        (Namespace Scope)                   (Cluster Scope)
+                    │                                       │
+                    └────────────── Grants Permissions ─────┘
+                                        │
+                                        ▼
+                               Kubernetes Resources
+                    Pods, Deployments, Services, Nodes,
+                  Secrets, ConfigMaps, Namespaces, etc.
+
+```
+
 ## Creating a Service Account
 
 We are creating a Service Account with the name `admin-user` in namespace `kubernetes-dashboard`:
