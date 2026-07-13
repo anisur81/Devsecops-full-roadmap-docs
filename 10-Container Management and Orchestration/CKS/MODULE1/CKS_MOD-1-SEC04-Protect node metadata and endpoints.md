@@ -4,11 +4,28 @@
 
 Protecting node metadata and API endpoints helps safeguard your cluster from unauthorized access. In our example, the following endpoint must be protected:
 
+The IP:
+```
+169.254.169.254
+```
+
+is used by cloud providers to expose instance metadata.
+
+Examples:
+
 ```
 http://169.254.169.254/latest/meta-data/
 ```
 
 **Action:** Implement IAM policies and network security groups to restrict access to this metadata.
+
+| Environment           | Metadata Endpoint                           |
+| --------------------- | ------------------------------------------- |
+| AWS EC2               | `http://169.254.169.254/latest/meta-data/`  |
+| Oracle Cloud          | `http://169.254.169.254/opc/v2/`            |
+| Azure                 | `http://169.254.169.254/metadata/instance`  |
+| Google Cloud          | `http://169.254.169.254/computeMetadata/v1` |
+| VMware/KVM/Bare Metal | Usually **none**                            |
 
 ---
 
