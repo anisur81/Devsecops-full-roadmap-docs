@@ -239,4 +239,43 @@ kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath="{.data.token}
 
 That's it! You are now logged in as an admin.
 
+
+## Kubernetes Dashboard Example
+
+```
+Dashboard Login
+        │
+        ▼
+Token
+        │
+        ▼
+ServiceAccount
+(admin-user)
+        │
+        ▼
+ClusterRoleBinding
+(admin-user)
+        │
+        ▼
+ClusterRole
+(cluster-admin)
+        │
+        ▼
+Dashboard API
+        │
+        ▼
+Display
+
+✓ Pods
+✓ Nodes
+✓ Deployments
+✓ Services
+✓ Secrets
+✓ ConfigMaps
+✓ Namespaces
+✓ Storage
+✓ Events
+
+```
+
  
