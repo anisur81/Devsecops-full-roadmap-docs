@@ -169,6 +169,26 @@ In most cases after provisioning the cluster using kops, kubeadm or any other po
 
 ---
 
+
+```
+$ vi k8s-dash-adminuser-crb.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+
+
+$ kubectl apply -f MOD01/k8s-dash-adminuser-crb.yaml
+```
+
 ## Getting a Bearer Token for ServiceAccount
 
 ### Short-lived Token
