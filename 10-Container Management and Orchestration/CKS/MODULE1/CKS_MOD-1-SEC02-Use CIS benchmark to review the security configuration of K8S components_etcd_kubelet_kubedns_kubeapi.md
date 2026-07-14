@@ -128,13 +128,10 @@ Open the generated report in browser:
 sudo mkdir -p /opt/kube-bench
 
 # Download the binary (check for latest version)
-curl -L https://github.com/aquasecurity/kube-bench/releases/download/v0.13.0/kube-bench_0.13.0_linux_amd64.tar.gz -o /opt/kube-bench.tar.gz
-
-# Extract
-tar -xvf kube-bench.tar.gz -C /opt/kube-bench
-
-# Move executable to PATH
-sudo mv /opt/kube-bench/kube-bench /usr/local/bin/
+KB_VERSION=0.15.6
+curl -L -O https://github.com/aquasecurity/kube-bench/releases/download/v${KB_VERSION}/kube-bench_${KB_VERSION}_linux_amd64.deb
+sudo apt install ./kube-bench_${KB_VERSION}_linux_amd64.deb -f
+ 
 ```
 
 ### Directory Structure
