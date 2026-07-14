@@ -36,7 +36,7 @@ Note: This two file generation process has been documented into the separate fil
 Store the TLS certificate and key in a Kubernetes secret:
 
 ```bash
-kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key
+kubectl create secret tls nginx-tls --cert=tls.crt --key=tls.key
 ```
 
 - This command creates a secret named `tls-secret` in your default namespace.
@@ -44,7 +44,7 @@ kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key
 
 ---
 
-## Install the NGINX Ingress Controller
+## Step 3: Install the NGINX Ingress Controller
 
 Apply the official manifest.
 
@@ -81,61 +81,156 @@ Check the controller service
 ```
 kubectl get svc -n ingress-nginx
 ```
-
 ---
-## Step 3: Create an Ingress Resource
+
+## Step 4: Deploy a sample nginx Application
+
+deployment.yaml
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: tls-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+```
+Deploy
+```
+kubectl apply -f deployment.yaml
+```
+Verify
+```
+kubectl get pods -n tls-demo
+```
+## Step 5 Create ClusterIP Service
+
+service.yaml
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: tls-demo
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+```
+Apply
+```
+kubectl apply -f service.yaml
+```
+Verify
+```
+kubectl get svc -n tls-demo
+```
+---
+## Step 6: Create an Ingress Resource
 Define an Ingress resource that uses the TLS secret:
 
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: my-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  name: nginx-ingress
+  namespace: tls-demo
 spec:
+  ingressClassName: nginx
+
   tls:
   - hosts:
-    - yourdomain.com
-    secretName: tls-secret
+    - devopslab.com
+    secretName: nginx-tls
+
   rules:
-  - host: yourdomain.com
+  - host: devopslab.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: my-service
+            name: nginx-service
             port:
               number: 80
+
 ```
-
-> **Note:** Replace `yourdomain.com` with your actual domain name and `my-service` with the name of the Kubernetes service you want to expose.
-
 ---
 
-## Step 4: Apply the Ingress Resource
-Apply the Ingress resource to your cluster:
+Apply
+```
+kubectl apply -f ingress.yaml
+```
+Verify Ingress
+```
+kubectl get ingress -n tls-demo
+```
+Example output
+```
+NAME             HOSTS
+nginx-ingress    demo.example.com
+```
+Describe
+```
+kubectl describe ingress nginx-ingress -n tls-demo
+ ```
+---
 
-```bash
+Apply the Ingress resource to your cluster:
+```
 kubectl apply -f ingress.yaml
 ```
 
 ---
 
 ## Step 5: Verify the Setup
-Ensure that your Ingress controller is correctly configured and supports TLS.
-
-- You can verify the setup by accessing your application via the domain name in a web browser.
-- The connection should be secured with HTTPS.
-
+ 
 ---
 
-## Step 6: Monitoring and Maintaining TLS
-- Regularly monitor your certificates’ expiration dates and renew them as needed.
-- Cert-Manager can automate this process for certificates issued by Let’s Encrypt.
+Find ingress IP
 
+```
+kubectl get ingress -n tls-demo
+or
+kubectl get svc -n ingress-nginx
+
+Update /etc/hosts on your local machine:
+
+<INGRESS_IP> demo.example.com
+```
+Test HTTPS
+```
+curl -k https://demo.example.com
+```
+Expected
+```
+Welcome to nginx!
+```
+Verify TLS Secret
+
+```
+kubectl describe secret nginx-tls -n tls-demo
+```
+Check Ingress TLS configuration
+```
+kubectl describe ingress nginx-ingress -n tls-demo
+``
 ---
 
 # Understanding TLS Passthrough and SSL Offloading
