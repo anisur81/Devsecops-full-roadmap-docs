@@ -44,6 +44,45 @@ kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key
 
 ---
 
+## Install the NGINX Ingress Controller
+
+Apply the official manifest.
+
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+```
+
+Check deployments
+
+```
+kubectl get deploy -n ingress-nginx
+```
+
+Check services
+
+```
+kubectl get svc -n ingress-nginx
+```
+
+Verify the IngressClass
+```
+kubectl get ingressclass
+```
+
+Verify controller
+```
+kubectl describe deployment ingress-nginx-controller -n ingress-nginx
+```
+Check logs
+```
+kubectl logs -n ingress-nginx deploy/ingress-nginx-controller
+```
+Check the controller service
+```
+kubectl get svc -n ingress-nginx
+```
+
+---
 ## Step 3: Create an Ingress Resource
 Define an Ingress resource that uses the TLS secret:
 
