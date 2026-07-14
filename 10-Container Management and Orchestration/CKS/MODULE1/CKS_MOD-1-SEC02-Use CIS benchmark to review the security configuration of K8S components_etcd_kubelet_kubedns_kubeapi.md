@@ -128,10 +128,12 @@ Open the generated report in browser:
 sudo mkdir -p /opt/kube-bench
 
 # Download the binary (check for latest version)
-KB_VERSION=0.15.6
-curl -L -O https://github.com/aquasecurity/kube-bench/releases/download/v${KB_VERSION}/kube-bench_${KB_VERSION}_linux_amd64.deb
-sudo apt install ./kube-bench_${KB_VERSION}_linux_amd64.deb -f
- 
+
+$ wget https://github.com/aquasecurity/kube-bench/releases/download/v0.15.6/kube-bench_0.15.6_linux_amd64.tar.gz
+$ tar -xf kube-bench_0.15.6_linux_amd64.tar.gz
+$ mv kube-bench /usr/bin/kube-bench
+
+
 ```
 
 ### Directory Structure
@@ -182,11 +184,14 @@ sudo kube-bench --config-dir /opt/kube-bench/cfg --config /opt/kube-bench/cfg/co
 
 ### Debian/Ubuntu
 ```bash
-curl -L https://github.com/aquasecurity/kube-bench/releases/download/v0.13.0/kube-bench_0.13.0_linux_amd64.deb
-sudo dpkg -i kube-bench.deb
+
+KB_VERSION=0.15.6
+curl -L -O https://github.com/aquasecurity/kube-bench/releases/download/v${KB_VERSION}/kube-bench_${KB_VERSION}_linux_amd64.deb
+sudo apt install ./kube-bench_${KB_VERSION}_linux_amd64.deb -f
+
 
 # Run after installation
-sudo kube-bench
+sudo kube-bench --config-dir /etc/kube-bench/cfg --config /etc/kube-bench/cfg/config.yaml
 ```
 
 **Note:** Configuration files located at `/etc/kube-bench/cfg/`
