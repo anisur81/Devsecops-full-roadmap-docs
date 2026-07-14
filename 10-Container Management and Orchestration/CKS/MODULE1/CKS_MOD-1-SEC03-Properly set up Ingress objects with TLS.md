@@ -8,7 +8,20 @@
 - A TLS certificate (can be self-signed or obtained from a Certificate Authority).
 
 ---
+Lab Architecture
 
+```
+Client
+   |
+ HTTPS (443)
+   |
+Ingress Controller (NGINX)
+   |
+Service (ClusterIP)
+   |
+Nginx Pod
+```
+---
 ## Step 1: Obtain a TLS Certificate
 
 ### Install Cert-Manager (Automated)
