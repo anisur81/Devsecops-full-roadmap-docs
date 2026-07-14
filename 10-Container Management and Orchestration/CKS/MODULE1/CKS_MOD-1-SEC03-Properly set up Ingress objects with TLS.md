@@ -258,6 +258,8 @@ kubectl describe ingress nginx-ingress -n tls-demo
 
 # Understanding TLS Passthrough and SSL Offloading
 
+Note: This is out of CKS exam content, is needed only for conceptual purpose .
+
 ## What is TLS Passthrough?
 
 TLS Passthrough means:
