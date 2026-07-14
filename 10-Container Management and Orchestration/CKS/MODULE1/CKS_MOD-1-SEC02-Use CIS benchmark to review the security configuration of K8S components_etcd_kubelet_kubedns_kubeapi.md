@@ -84,8 +84,8 @@ cd Assessor
 ./Assessor-CLI.sh -i -rd /home/koenig -nts -rp sample
 
 # Full example (most used)
-sudo ./CIS-CAT.sh -a \
-  -b benchmarks/CIS_Ubuntu_22.04_L1.xml \
+sudo ./Assessor-CLI.sh -a \
+  -b benchmarks/CIS_Ubuntu_Linux_24.04_LTS_Benchmark_v2.0.0-xccdf.xml \
   -o html,json \
   -rd /opt/cis-reports/
 ```
