@@ -24,20 +24,12 @@ Nginx Pod
 ---
 ## Step 1: Obtain a TLS Certificate
 
-### Install Cert-Manager (Automated)
-Cert-Manager is a Kubernetes tool that automates the management and issuance of TLS certificates.
-
-```bash
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml
+###  
 ```
-
-### Option B: Creating a Self-Signed Certificate
-For testing purposes, you can create a self-signed certificate using OpenSSL:
-
-```bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=yourdomain.com/O=yourdomain.com"
+1. Generate the  Server private key(tls.key)  and Server certificate (tls.crt) signed by Root CA 
+Note: This two file generation process has been documented into the separate file
+2. Now Create the k8s tls secret using the above two files
 ```
-
 ---
 
 ## Step 2: Create a Kubernetes Secret
