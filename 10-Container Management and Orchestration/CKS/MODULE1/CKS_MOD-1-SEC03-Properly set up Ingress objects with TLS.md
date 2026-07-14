@@ -184,7 +184,7 @@ kubectl get ingress -n tls-demo
 Example output
 ```
 NAME             HOSTS
-nginx-ingress    demo.example.com
+nginx-ingress    devopslab.com
 ```
 Describe
 ```
@@ -199,7 +199,7 @@ kubectl apply -f ingress.yaml
 
 ---
 
-## Step 5: Verify the Setup
+## Step 7: Verify the Setup
  
 ---
 
@@ -212,11 +212,11 @@ kubectl get svc -n ingress-nginx
 
 Update /etc/hosts on your local machine:
 
-<INGRESS_IP> demo.example.com
+<INGRESS_IP> devopslab.com
 ```
 Test HTTPS
 ```
-curl -k https://demo.example.com
+curl -k https://devopslab.com
 ```
 Expected
 ```
@@ -230,8 +230,31 @@ kubectl describe secret nginx-tls -n tls-demo
 Check Ingress TLS configuration
 ```
 kubectl describe ingress nginx-ingress -n tls-demo
-``
+```
 ---
+
+## Step 8 Troubleshooting
+```
+Check ingress controller
+
+kubectl get pods -n ingress-nginx
+
+View controller logs
+
+kubectl logs -n ingress-nginx deploy/ingress-nginx-controller
+
+Verify endpoints
+
+kubectl get endpoints -n tls-demo
+
+Check services
+
+kubectl get svc -n tls-demo
+
+Check ingress
+
+kubectl describe ingress nginx-ingress -n tls-demo
+```
 
 # Understanding TLS Passthrough and SSL Offloading
 
