@@ -125,7 +125,11 @@ spec:
 
 ```
 ### Production Best Practices
- 
+ - **Audit regularly:** Use tools like **kubesec** or **krane** to identify over-privileged users, ServiceAccounts, Roles, and ClusterRoles.
+
+- **Use Bound Service Account Tokens:** Use projected ServiceAccount tokens (Projected Volumes) so that tokens are short-lived, automatically rotated, and expire after a configurable duration.
+
+- **Avoid ClusterRoles:** Use **Role** and **RoleBinding** whenever possible. Create **ClusterRole** and **ClusterRoleBinding** only when an application or user genuinely requires cluster-wide permissions.
  Audit regularly:  Use tools like kubesec or krane to find over-privileged accounts.
  Use Bound Service Account Tokens: Utilize Projected Volumes for tokens so they expire quickly.
  Avoid ClusterRoles: Never use ClusterRoleBinding unless the pod strictly requires cluster-wide access.
