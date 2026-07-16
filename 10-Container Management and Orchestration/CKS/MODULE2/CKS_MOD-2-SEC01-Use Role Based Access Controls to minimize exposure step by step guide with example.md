@@ -1,6 +1,6 @@
 # Use Role Based Access Controls to minimize exposure step by step guide with example
 
-1. Check whether RBAC is enabled
+### 1. Check whether RBAC is enabled
 ```
 $  kubectl api-versions | grep rbac
 
@@ -9,7 +9,7 @@ rbac.authorization.k8s.io/v1
 
 Use Role Based Access Controls to minimize exposure step by step guide with example
 
-2. Create a Service Account
+### 2. Create a Service Account
 
 You’ll bind the Role you create to this Service Account:
 ```
@@ -18,7 +18,7 @@ $ kubectl create serviceaccount demo-user
 serviceaccount/demo-user created
 ```
 
-Next, run the following command to create an authorization token for your Service Account:
+### 3. Next, run the following command to create an authorization token for your Service Account:
 ```
 $ TOKEN=$(kubectl create token demo-user)
 ```
@@ -26,7 +26,7 @@ The token’s value will now be saved to the $TOKEN environment variable in your
 
 Configure kubectl with your Service Account
 
-Now add a new kubectl context that lets you authenticate as your Service Account. 
+### 4. Now add a new kubectl context that lets you authenticate as your Service Account. 
 
 First, add your Service Account as a credential in your Kubeconfig file:
 ```
@@ -48,7 +48,7 @@ switch back to your administrative account in the next section:
 $ kubectl config current-context
 kubernetes-admin@kubernetes
 ```
-Now, switch over to your new context that authenticates as your service account:
+### 5. Now, switch over to your new context that authenticates as your service account:
 ```
 $ kubectl config use-context demo-user-context
 
@@ -67,7 +67,7 @@ This will allow you to create your Role and RoleBinding objects in the next sect
 $ kubectl config use-context kubernetes-admin@kubernetes
 Switched to context "kubernetes-admin@kubernetes".
 ```
-3. Create a Role
+### 6. Create a Role
 ``` 
 $ vi role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -91,7 +91,7 @@ rules:
 $ kubectl apply -f role.yaml
 role.rbac.authorization.k8s.io/demo-role created
 ```
-4. Create a RoleBinding
+### 7. Create a RoleBinding
 
 The Role has been created but it’s not yet assigned to your Service Account. 
 A RoleBinding is required to make this connection.
@@ -117,7 +117,7 @@ $ kubectl apply -f rolebinding.yaml
 rolebinding.rbac.authorization.k8s.io/demo-role-binding created
 ```
 
-5. Verify your service account has been granted the Role’s Permissions
+### 8. Verify your service account has been granted the Role’s Permissions
 
 Switch back to the Kubectl context that authenticates as the Service Account user:
 ```
