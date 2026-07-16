@@ -157,6 +157,23 @@ $ kubectl delete pod nginx
 Error from server (Forbidden): pods "nginx" is forbidden: User "system:serviceaccount:default:demo-user" cannot delete resource "pods" in API group "" in the namespace "default"
 ```
 
+## 9 Clean the demo-user from the k8s cluster
+```
+oracle@dockertest01:~/RBAC$ kubectl config get-contexts
+CURRENT   NAME                          CLUSTER      AUTHINFO           NAMESPACE
+          demo-user-context             kubernetes   demo-user
+*         kubernetes-admin@kubernetes   kubernetes   kubernetes-admin
 
+oracle@dockertest01:~/RBAC$ kubectl config unset users.demo-user
+Property "users.demo-user" unset.
+
+oracle@dockertest01:~/RBAC$ kubectl config delete-context demo-user-context
+deleted context demo-user-context from /home/oracle/.kube/config
+
+oracle@dockertest01:~/RBAC$ kubectl config get-contexts
+CURRENT   NAME                          CLUSTER      AUTHINFO           NAMESPACE
+          demo-user-context             kubernetes   demo-user
+*         kubernetes-admin@kubernetes   kubernetes   kubernetes-admin
+```
 
 
