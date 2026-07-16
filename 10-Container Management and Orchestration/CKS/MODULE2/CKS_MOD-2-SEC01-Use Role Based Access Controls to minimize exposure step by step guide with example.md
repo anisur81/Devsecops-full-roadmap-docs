@@ -131,7 +131,7 @@ NAME       READY   STATUS    RESTARTS       AGE
 netshoot   1/1     Running   23 (11m ago)   23h
  ```
 You can also try creating a Pod as your Service Account:
-
+```
 $ kubectl run nginx --image=nginx:latest
 pod/nginx created
 
