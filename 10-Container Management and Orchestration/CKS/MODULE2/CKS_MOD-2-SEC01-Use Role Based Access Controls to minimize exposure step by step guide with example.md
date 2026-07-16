@@ -138,6 +138,7 @@ pod/nginx created
 ```
 The Pod is successfully created:
 Now the check the newly created ones.
+
 ```
 $ kubectl get pods
 
@@ -145,7 +146,10 @@ NAME    READY   STATUS    RESTARTS   AGE
 netshoot   1/1     Running   23 (11m ago)   23h
 nginx   1/1     Running   0          15s
 ```
+
+ 
 However, it’s not possible for the Service Account user to delete Pods because the Role you’ve assigned doesn’t include the required delete action verb:
+ 
 ```
 $ kubectl delete pod nginx
 Error from server (Forbidden): pods "nginx" is forbidden: User "system:serviceaccount:default:demo-user" cannot delete resource "pods" in API group "" in the namespace "default"
