@@ -109,8 +109,10 @@ spec:
   - name: tool-container
     image: bitnami/kubectl:latest
     command: ["sleep", "3600"]
-	```
+
+```
 ## Step 5. Verify Your Lab Setup Once deployed using auth can-i.
+ 
  ```
  Check if the pod can list pods (Should be YES):
  $ kubectl auth can-i list pods --as=system:serviceaccount:secure-apps:pod-viewer-sa -n secure-apps
@@ -120,8 +122,10 @@ spec:
  
  Check if the pod can look at secrets (Should be NO):
  $ bash kubectl auth can-i get secrets --as=system:serviceaccount:secure-apps:pod-viewer-sa -n secure-apps
- ``
- ### Production Best Practices
+
+```
+### Production Best Practices
+ 
  Audit regularly:  Use tools like kubesec or krane to find over-privileged accounts.
  Use Bound Service Account Tokens: Utilize Projected Volumes for tokens so they expire quickly.
  Avoid ClusterRoles: Never use ClusterRoleBinding unless the pod strictly requires cluster-wide access.
