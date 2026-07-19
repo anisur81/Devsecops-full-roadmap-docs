@@ -40,11 +40,10 @@ Think: **"If a node were compromised, what could an attacker abuse?"** Anything 
 ## 2. Lab Setup
 
 Any of these work — use whatever you have:
-- `kubeadm` cluster (2+ VMs, real practice closest to exam)
-- `minikube` with `--driver=ssh` or a VM driver (not Docker driver, since you need real host access)
-- A plain Ubuntu/CentOS VM if you just want to practice OS-level tasks without a cluster
+- `kubeadm` cluster (3+ VMs, real practice closest to exam)
+- A plain Ubuntu VM if you just want to practice OS-level tasks without a cluster
 
-```bash
+```
 # Example: check what's listening right now (baseline)
 sudo ss -tulnp
 sudo systemctl list-units --type=service --state=running
@@ -56,7 +55,7 @@ sudo systemctl list-units --type=service --state=running
 
 **Task:** On a worker node, identify and disable any non-essential services.
 
-```bash
+```
 # List all enabled services
 systemctl list-unit-files --type=service --state=enabled
 
@@ -79,7 +78,7 @@ systemctl status avahi-daemon
 
 **Task:** Prevent loading of an unneeded/risky kernel module (classic exam example: `dccp`, `sctp`, or `bluetooth`).
 
-```bash
+```
 # Check if module is currently loaded
 lsmod | grep dccp
 
@@ -105,7 +104,7 @@ lsmod | grep dccp   # should show nothing
 
 **Task:** Identify unexpected listening ports and lock them down with a host firewall.
 
-```bash
+```
 # Baseline
 sudo ss -tulnp
 
@@ -136,7 +135,7 @@ Know the required Kubernetes control-plane/node ports so you don't accidentally 
 
 **Task:** Purge compilers, package managers, and debug tools that shouldn't exist on a production node.
 
-```bash
+```
 # Check what's installed that shouldn't be there
 dpkg -l | grep -E 'gcc|make|telnet|tcpdump'
 
@@ -153,7 +152,7 @@ sudo apt autoremove -y
 
 **Task:** Reduce SSH as an attack vector (common CKS host-hardening sub-task).
 
-```bash
+```
 sudo vi /etc/ssh/sshd_config
 ```
 Set:
@@ -172,7 +171,7 @@ sudo systemctl restart sshd
 
 **Task:** Apply the small subset of sysctl hardening that's plausible on CKS — don't try to memorize a full CIS sysctl list, just these.
 
-```bash
+```
 sudo nano /etc/sysctl.d/99-cks-hardening.conf
 ```
 Add:
@@ -204,7 +203,7 @@ sudo sysctl net.ipv4.ip_forward net.ipv4.tcp_syncookies
 
 **Task:** Ensure the container runtime socket is only accessible as needed, and that no unnecessary runtime is installed alongside the active one.
 
-```bash
+```
 # Check permissions on the runtime socket
 ls -l /run/containerd/containerd.sock
 
@@ -219,7 +218,7 @@ sudo chmod 660 /run/containerd/containerd.sock
 > *"SSH into node `worker1`. The `cramfs` and `freevxfs` kernel modules must never be loaded. Additionally, the `xinetd` service must be stopped, disabled, and unable to be started again. Verify all changes persist after checking module load attempts and service status."*
 
 **Solution:**
-```bash
+```
 ssh worker1
 
 # Kernel modules
