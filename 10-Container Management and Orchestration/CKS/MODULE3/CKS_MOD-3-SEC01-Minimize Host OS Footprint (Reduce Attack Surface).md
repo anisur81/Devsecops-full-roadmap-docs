@@ -52,12 +52,26 @@ sudo systemctl list-units --type=service --state=running
 ---
 
 ## Exercise 1: Audit and Disable Unnecessary Services
+ 
+Goal: Any listening daemon is a potential entry point. Kubernetes nodes typically only need kubelet, container runtime, and CNI-related processes — not things like cups, avahi-daemon, rpcbind, nfs-server.
 
 **Task:** On a worker node, identify and disable any non-essential services.
 
 ```
 # List all enabled services
 systemctl list-unit-files --type=service --state=enabled
+
+# List active services
+systemctl list-units --type=service --state=running
+
+
+
+# List everything listening on the network
+sudo ss -tulpn
+# or
+sudo netstat -tulpn
+
+Example output might show rpcbind or avahi-daemon listening — these are almost never needed on a k8s node.
 
 # Common exam-bait services to check for and disable if not needed:
 # - rpcbind, nfs-common, avahi-daemon, cups, bluetooth, telnet, rsh
@@ -68,6 +82,15 @@ sudo systemctl mask avahi-daemon   # prevents accidental restart
 
 # Verify
 systemctl status avahi-daemon
+
+sudo systemctl stop rpcbind
+sudo systemctl disable rpcbind
+
+Verify:
+
+$ sudo ss -tulpn | grep -E 'avahi|rpcbind'
+# should return nothing
+
 ```
 
 **Why `mask` matters:** `disable` prevents auto-start at boot, but another unit or dependency could still start it. `mask` symlinks the unit to `/dev/null`, so it can't be started at all — even manually — until unmasked. Exam graders often check for `masked`, not just `disabled`.
