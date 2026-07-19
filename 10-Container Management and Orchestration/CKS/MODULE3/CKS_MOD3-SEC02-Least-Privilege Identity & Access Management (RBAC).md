@@ -429,17 +429,4 @@ done
 </details>
 
 ---
-
-## 8. Exam-Day Reminders
-
-- **Always verify with `kubectl auth can-i`** after writing a Role/Binding — don't trust
-  the YAML alone; a typo'd `apiGroups` silently grants nothing or the wrong thing.
-- Empty string `""` = core API group (pods, services, configmaps, secrets). Easy to
-  forget and a common source of "why isn't this working."
-- `verbs` you'll use constantly: `get`, `list`, `watch`, `create`, `update`, `patch`,
-  `delete`, `deletecollection`. Never grant `*` unless the task explicitly asks for it.
-- If a task says "a user/group," remember Kubernetes doesn't have native User/Group
-  objects — you bind by name via certs or external auth; you don't need to "create" the
-  user, just reference the name in the RoleBinding subject.
-- Clean up test resources (`kubectl delete ns cks-lab`) so leftover objects don't
-  confuse later exam tasks if you're reusing a practice cluster.
+ 
