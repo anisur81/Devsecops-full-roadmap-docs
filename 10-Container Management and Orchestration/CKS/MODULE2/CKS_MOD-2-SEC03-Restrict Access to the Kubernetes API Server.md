@@ -139,9 +139,10 @@ Older API servers exposed `--insecure-port=8080` with **no auth at all**. On mod
 ```
 grep insecure-port /etc/kubernetes/manifests/kube-apiserver.yaml
 ```
-
+```
 If present and non-zero, remove the flag or set it to `0`. There is no reason for this flag to exist in a hardened cluster.
 --insecure-port=0              (Disable insecure port)
+```
 ---
 ## Step 4. RBAC least-privilege (users, service accounts) We can follow the following section.
 
