@@ -132,3 +132,14 @@ curl -k https://<control-plane-ip>:6443/api/ -s
 ```
 
 ---
+## 3. Ensure the insecure port is off (legacy but still asked)
+
+Older API servers exposed `--insecure-port=8080` with **no auth at all**. On modern kubeadm clusters this is already removed/defaulted to 0, but verify:
+
+```
+grep insecure-port /etc/kubernetes/manifests/kube-apiserver.yaml
+```
+
+If present and non-zero, remove the flag or set it to `0`. There is no reason for this flag to exist in a hardened cluster.
+
+---
