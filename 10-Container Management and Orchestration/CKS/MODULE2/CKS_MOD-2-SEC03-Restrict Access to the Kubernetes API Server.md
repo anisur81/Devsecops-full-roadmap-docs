@@ -143,3 +143,44 @@ grep insecure-port /etc/kubernetes/manifests/kube-apiserver.yaml
 If present and non-zero, remove the flag or set it to `0`. There is no reason for this flag to exist in a hardened cluster.
 
 ---
+## Step 4. RBAC least-privilege (users, service accounts) We can follow the following section.
+
+CKS_MOD-03-SEC-02-Using least-privilege identity and access management
+---
+## Step 5. Verify with `kubectl auth can-i` (the CKS bread-and-butter command)
+
+```
+# Should be yes
+kubectl auth can-i get pods --as=system:serviceaccount:default:dev-user -n default
+
+# Should be no — no create permission granted
+kubectl auth can-i create pods --as=system:serviceaccount:default:dev-user -n default
+
+# Should be no — no access outside its namespace
+kubectl auth can-i get pods --as=system:serviceaccount:default:dev-user -n kube-system
+```
+
+---
+
+
+## Step 6. Enable the NodeRestriction admission plugin
+
+Ensures kubelets can only modify their **own** Node/Pod objects — prevents a compromised node from tampering with others.
+
+```
+grep enable-admission-plugins /etc/kubernetes/manifests/kube-apiserver.yaml
+ - --enable-admission-plugins=NodeRestriction
+
+```
+
+Confirm it includes `NodeRestriction`:
+```
+    - --enable-admission-plugins=NodeRestriction,...
+```
+
+If missing, add it to the comma-separated list and save the manifest.
+
+---
+
+
+
