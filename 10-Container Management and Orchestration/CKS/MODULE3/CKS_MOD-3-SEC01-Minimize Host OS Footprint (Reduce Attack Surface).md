@@ -97,49 +97,72 @@ $ sudo ss -tulpn | grep -E 'avahi|rpcbind'
 
 ---
 
-## Exercise 2: Restrict Kernel Modules
+## Exercise 2: Disable unused/unsafe kernel modules
 
-**Task:** Prevent loading of an unneeded/risky kernel module (classic exam example: `dccp`, `sctp`, or `bluetooth`).
+Goal: Reduce kernel attack surface by blacklisting modules not needed for container workloads (rare protocols like DCCP, SCTP, RDS, TIPC are common CVE targets and rarely used).
 
 ```
-# Check if module is currently loaded
-lsmod | grep dccp
+# Check currently loaded modules
+lsmod | grep -E 'dccp|sctp|rds|tipc'
 
 # If loaded, unload it
 sudo modprobe -r dccp
 
-# Blacklist it so it can't be loaded again
-echo "install dccp /bin/true" | sudo tee /etc/modprobe.d/dccp-blacklist.conf
+# Blacklist them so they can't be loaded (even by an attacker via container escape)
+cat <<EOF | sudo tee /etc/modprobe.d/cks-blacklist.conf
+install dccp /bin/false
+install sctp /bin/false
+install rds /bin/false
+install tipc /bin/false
+EOF
 
-# Alternative blacklist syntax (also acceptable)
-echo "blacklist dccp" | sudo tee -a /etc/modprobe.d/dccp-blacklist.conf
+# Unload if currently loaded
+sudo modprobe -r dccp sctp rds tipc 2>/dev/null || true
 
 # Verify it can't load
 sudo modprobe dccp
 lsmod | grep dccp   # should show nothing
+
 ```
 
-**Exam tip:** `install <module> /bin/true` is the more bulletproof method — it overrides the module load with a no-op command instead of just hiding it from automatic loaders. Know both syntaxes.
+**Exam tip: Know that CKS may present this as "prevent module X from being loaded on the node" — the answer is a /etc/modprobe.d/*.conf blacklist file, not just rmmod, because rmmod alone doesn't survive reboot or reload attempts.
 
 ---
 
 ## Exercise 3: Minimize Open Ports on a Node
 
-**Task:** Identify unexpected listening ports and lock them down with a host firewall.
+Goal: Use ufw/iptables to only permit the ports Kubernetes actually needs, blocking everything else.
 
+Key ports to allow (control plane example, adjust for worker nodes):
+
+
+6443 (API server)
+2379-2380 (etcd, control plane only)
+10250 (kubelet)
+10259, 10257 (scheduler/controller-manager, control plane only)
+Your CNI's ports (e.g., 8285/8472 for flannel VXLAN)
 ```
 # Baseline
 sudo ss -tulnp
 
-# Example: a debug service accidentally left listening on 8888
-sudo ufw status
-sudo ufw deny 8888/tcp
-sudo ufw enable
+ sudo apt install -y ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
 
-# Or with iptables directly (more common in exam VMs, ufw isn't always installed)
-sudo iptables -A INPUT -p tcp --dport 8888 -j DROP
-sudo iptables -L -n
+sudo ufw allow 22/tcp        # SSH (already hardened above)
+sudo ufw allow 6443/tcp      # API server
+sudo ufw allow 10250/tcp     # kubelet API
+sudo ufw allow 2379:2380/tcp # etcd (control plane node only)
+
+sudo ufw enable
+sudo ufw status verbose
 ```
+Verify from another node:
+```
+nc -zv <node-ip> 6443     # should succeed
+nc -zv <node-ip> 23       # should fail/timeout (telnet port, closed)
+```
+
 
 Know the required Kubernetes control-plane/node ports so you don't accidentally block the cluster:
 
@@ -184,7 +207,7 @@ sudo apt autoremove -y
 
 ## Exercise 5: Harden SSH on Nodes
 
-**Task:** Reduce SSH as an attack vector (common CKS host-hardening sub-task).
+***Goal: SSH is the most common node entry point. Restrict it hard.
 
 ```
 sudo vi /etc/ssh/sshd_config
@@ -193,9 +216,12 @@ Set:
 ```
 PermitRootLogin no
 PasswordAuthentication no
+PubkeyAuthentication yes
 X11Forwarding no
+AllowTcpForwarding no
+MaxAuthTries 3
 ```
-```bash
+``` 
 sudo systemctl restart sshd
 ```
 
