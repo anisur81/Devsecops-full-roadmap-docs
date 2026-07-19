@@ -6,8 +6,6 @@ This lab covers the **CKS exam curriculum topic "Minimize external access to the
 2. **Pod-to-pod / namespace traffic control** — `NetworkPolicy`, which is the layer most CKS candidates under-practice and the one most heavily tested.
 3. **Host-level firewalling** — `ufw` / `iptables` on the nodes themselves.
 
-> ⚠️ **Correction to earlier version of this lab:** the original version stopped at Service-type restrictions and host firewalling. It **omitted NetworkPolicy entirely**, which is the primary mechanism the CKS curriculum means when it says "minimize external access to the network." This revision adds that section (Labs 9–14 below) and fixes several command/ordering issues.
-
 ---
 
 ## Lab Objectives
