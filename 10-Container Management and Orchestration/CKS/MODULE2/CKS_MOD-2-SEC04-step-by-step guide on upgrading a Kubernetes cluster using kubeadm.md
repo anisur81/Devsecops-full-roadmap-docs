@@ -1,0 +1,2 @@
+## For a detailed, step-by-step guide on upgrading a Kubernetes cluster using kubeadm, please refer to the complete documentation here:
+[How to Perform a version upgrade on a Kubernetes cluster using Kubeadm](https://github.com/anisur81/Devsecops-full-roadmap-docs/blob/main/10-Container%20Management%20and%20Orchestration/CKA/MODULE1/CKA-MODULE-01-SEC-05-How%20to%20Perform%20a%20version%20upgrade%20on%20a%20Kubernetes%20cluster%20using%20Kubeadm.md)
