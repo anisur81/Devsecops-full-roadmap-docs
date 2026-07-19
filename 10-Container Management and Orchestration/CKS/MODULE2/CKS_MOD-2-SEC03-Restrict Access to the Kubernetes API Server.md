@@ -182,6 +182,29 @@ Confirm it includes `NodeRestriction`:
 If missing, add it to the comma-separated list and save the manifest.
 
 ---
+### CKS Exam Verification Command
 
+```
+CKS Exam Verification Commands
+kubectl auth whoami
+kubectl auth can-i get pods
+kubectl auth can-i list secrets
+kubectl auth can-i '*' --as=system:serviceaccount:default:test-sa
+
+kubectl cluster-info
+
+kubectl get pods -n kube-system
+
+kubectl describe clusterrole cluster-admin
+
+kubectl describe rolebinding
+
+kubectl describe clusterrolebinding
+
+curl -k https://<MASTER-IP>:6443
+
+sudo cat /etc/kubernetes/manifests/kube-apiserver.yaml
+
+```
 
 
