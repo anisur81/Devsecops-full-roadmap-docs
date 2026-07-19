@@ -131,10 +131,10 @@ Know the required Kubernetes control-plane/node ports so you don't accidentally 
 
 ---
 
-## Exercise 4: Remove Unnecessary Packages
+## Exercise 4: Audit installed packages and remove unnecessary ones
 
-**Task:** Purge compilers, package managers, and debug tools that shouldn't exist on a production node.
-
+Goal: Identify and remove packages that aren't required for the node to function (compilers, unused clients, legacy protocols).
+ 
 ```
 # Check what's installed that shouldn't be there
 dpkg -l | grep -E 'gcc|make|telnet|tcpdump'
