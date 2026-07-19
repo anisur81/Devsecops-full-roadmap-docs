@@ -139,8 +139,19 @@ Know the required Kubernetes control-plane/node ports so you don't accidentally 
 # Check what's installed that shouldn't be there
 dpkg -l | grep -E 'gcc|make|telnet|tcpdump'
 
-# Remove
-sudo apt remove --purge -y telnetd
+Audit installed packages and remove unnecessary ones
+
+Goal: Identify and remove packages that aren't required for the node to function (compilers, unused clients, legacy protocols).
+
+# See what's installed
+dpkg -l | less                     # Debian/Ubuntu
+rpm -qa | less                     # RHEL/CentOS
+
+# Common attack-surface packages to check for and remove if unused:
+sudo apt list --installed | grep -E 'telnet|ftp|rsh-client|talk|nis|tftp'
+
+# Remove them
+sudo apt purge -y telnet ftp rsh-client talk nis tftp
 sudo apt autoremove -y
 ```
 
