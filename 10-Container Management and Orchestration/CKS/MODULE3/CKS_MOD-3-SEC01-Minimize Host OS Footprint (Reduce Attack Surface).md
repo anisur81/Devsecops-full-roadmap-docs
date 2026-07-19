@@ -270,10 +270,30 @@ ls -l /run/containerd/containerd.sock
 # Should not be world-writable
 sudo chmod 660 /run/containerd/containerd.sock
 ```
+---
+
+## 8:  Run an automated OS hardening audit with Lynis
+
+Goal: CKS expects familiarity with using a scanning tool to find hardening gaps (same pattern as kube-bench for k8s components, but for the OS itself).
+```
+bashsudo apt install -y lynis
+sudo lynis audit system
+```
+Review the output — it flags things like:
+
+
+Unnecessary running services
+```
+Weak SSH config
+World-writable files
+Missing kernel hardening (sysctl) settings
+```
+
+At the end it gives a hardening index score. Pick a few "suggestions" and remediate them as extra practice (e.g., set umask, disable core dumps).
 
 ---
 
-## Exercise 8: Put It Together — Simulated Exam Task
+## Exercise 9: Put It Together — Simulated Exam Task
 
 > *"SSH into node `worker1`. The `cramfs` and `freevxfs` kernel modules must never be loaded. Additionally, the `xinetd` service must be stopped, disabled, and unable to be started again. Verify all changes persist after checking module load attempts and service status."*
 
@@ -301,16 +321,4 @@ systemctl is-enabled xinetd    # masked
 ```
 
 ---
-
-## 3. Quick Self-Check Checklist
-
-- [ ] Can you list and disable a systemd service, then explain disable vs mask?
-- [ ] Can you blacklist a kernel module using both `install ... /bin/true` and `blacklist` syntax, from memory, without docs?
-- [ ] Can you identify unexpected listening ports with `ss -tulnp` and block with iptables?
-- [ ] Do you know which K8s ports must stay open ?
-- [ ] Can you check/fix permissions on the container runtime socket?
-- [ ] Can you name the 3-4 sysctl parameters worth knowing, and explain why `ip_forward` is dangerous to blindly disable on a real cluster node?
-
----
-
- 
+  
