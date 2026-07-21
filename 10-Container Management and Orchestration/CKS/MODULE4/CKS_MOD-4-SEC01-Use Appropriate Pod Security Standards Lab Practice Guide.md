@@ -165,15 +165,30 @@ spec:
     runAsUser: 1000
     seccompProfile:
       type: RuntimeDefault
+
+  volumes:
+  - name: cache
+    emptyDir: {}
+  - name: run
+    emptyDir: {}
+
   containers:
   - name: nginx
     image: nginx:stable
+
     securityContext:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: true
       capabilities:
         drop:
         - ALL
+
+    volumeMounts:
+    - name: cache
+      mountPath: /var/cache/nginx
+    - name: run
+      mountPath: /run
+
 ```
 
 ```bash
