@@ -307,6 +307,37 @@ kubectl apply -f secure-pod.yaml -n psa-lab
 # Warning: would violate PodSecurity "restricted:latest": ...
 ```
 
+Enable audit log if disable
+
+At first Change the file kube-api yaml file /etc/kubernetes/manifests/kube-apiserver.yaml
+```
+   - command
+     - --audit-policy-file=/etc/kubernetes/audit-policy.yaml
+     - --audit-log-path=/var/log/kubernetes/audit.log
+     - --audit-log-maxage=30
+     - --audit-log-maxbackup=10
+     - --audit-log-maxsize=100
+
+ volumeMounts:
+ - mountPath: /etc/kubernetes/audit-policy.yaml
+   name: audit-policy
+   readOnly: true
+ - mountPath: /var/log/kubernetes
+   name: audit-log
+
+  voulumes:
+  - hostPath:
+      path: /etc/kubernetes/audit-policy.yaml
+      type: File
+    name: audit-policy
+  - hostPath:
+      path: /var/log/kubernetes
+      type: DirectoryOrCreate
+    name: audit-log
+
+```
+The static pod (kube-apiserver) will automatically restarted.
+
 Check audit log entries (path depends on cluster setup; commonly `/var/log/kubernetes/audit.log` on the control-plane node in kubeadm clusters):
 
 ```bash
