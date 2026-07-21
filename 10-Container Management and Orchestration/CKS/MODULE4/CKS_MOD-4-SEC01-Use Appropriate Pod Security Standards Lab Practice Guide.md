@@ -414,7 +414,7 @@ PSA covers the built-in standards; **OPA Gatekeeper** lets you enforce custom or
 ### 9a. Install Gatekeeper
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/release-3.20/deploy/gatekeeper.yaml
+kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/v3.22.2/deploy/gatekeeper.yaml
 
 kubectl get pods -n gatekeeper-system
 # gatekeeper-controller-manager...
