@@ -309,7 +309,22 @@ kubectl apply -f secure-pod.yaml -n psa-lab
 
 Enable audit log if disable
 
-At first Change the file kube-api yaml file /etc/kubernetes/manifests/kube-apiserver.yaml
+
+At first create the direcotory 
+```
+sudo mkdir -p /var/log/kubernetes
+```
+Create the auidit policy yaml file inside the /etc/kubernetes
+```
+$ vi /etc/kubernetes/audit-policy.yaml
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: Metadata
+
+```
+
+Change the file kube-api yaml file /etc/kubernetes/manifests/kube-apiserver.yaml
 ```
    - command
      - --audit-policy-file=/etc/kubernetes/audit-policy.yaml
