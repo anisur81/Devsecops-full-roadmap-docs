@@ -357,6 +357,9 @@ Check audit log entries (path depends on cluster setup; commonly `/var/log/kuber
 
 ```bash
 grep "restricted" /var/log/kubernetes/audit.log | tail -5
+
+log returned if the above labels matches for creating the pod
+
 ```
 
 ---
