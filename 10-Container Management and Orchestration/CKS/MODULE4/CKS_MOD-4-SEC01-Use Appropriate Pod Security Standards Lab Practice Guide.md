@@ -517,68 +517,7 @@ kubectl label namespace psa-lab pod-security.kubernetes.io/enforce-
 
 ```bash
 kubectl delete ns secure psa-lab
-kubectl delete -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/release-3.20/deploy/gatekeeper.yaml
-```
-
----
-
-## 12. CKS Exam Practice Questions
-
-**Q1. Namespace `production` must only allow Restricted pods.**
-```bash
-kubectl label ns production pod-security.kubernetes.io/enforce=restricted
-```
-
-**Q2. Prevent root containers.**
-```yaml
-securityContext:
-  runAsNonRoot: true
-```
-
-**Q3. Drop all Linux capabilities.**
-```yaml
-capabilities:
-  drop:
-  - ALL
-```
-
-**Q4. Disable privilege escalation.**
-```yaml
-allowPrivilegeEscalation: false
-```
-
-**Q5. Use the default seccomp profile.**
-```yaml
-seccompProfile:
-  type: RuntimeDefault
-```
-
----
-
-## 13. Complete Reference Pod (copy-paste template)
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: secure-app
-  labels:
-    owner: admin
-spec:
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    seccompProfile:
-      type: RuntimeDefault
-  containers:
-  - name: nginx
-    image: nginx:stable
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-        - ALL
+kubectl delete -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/v3.22.2/deploy/gatekeeper.yaml
 ```
 
 ---
