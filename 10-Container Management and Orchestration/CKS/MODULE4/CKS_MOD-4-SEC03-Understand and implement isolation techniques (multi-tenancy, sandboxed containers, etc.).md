@@ -368,6 +368,68 @@ Look for `Runtime Class Name: kata` in the pod description.
 5. Create a `RuntimeClass` named `kata`.
 6. Deploy a pod using `runtimeClassName: kata`.
 
+#### Install and Configure kata container
+
+Install zstd
+```
+sudo apt update
+sudo apt install -y zstd
+```
+Download the correct package
+```
+export VERSION=3.32.0
+
+wget https://github.com/kata-containers/kata-containers/releases/download/${VERSION}/kata-static-${VERSION}-amd64.tar.zst
+Step 3: Extract it
+sudo tar --zstd -xvf kata-static-${VERSION}-amd64.tar.zst -C /
+
+or
+
+zstd -d kata-static-${VERSION}-amd64.tar.zst
+sudo tar -xvf kata-static-${VERSION}-amd64.tar -C /
+```
+Check the following parameters
+```
+oracle@dockertest01:~/ISOLATION$ containerd --version
+containerd containerd v2.2.6 11ce9d5f3c68c941867e82890e93e815c1304f1b
+oracle@dockertest01:~/ISOLATION$ lscpu | grep Virtualization
+Virtualization:                          VT-x
+Virtualization type:                     full
+```
+Your environment looks suitable for Kata Containers:
+```
+containerd: v2.2.6 
+CPU Virtualization: VT-x 
+Virtualization type: full 
+```
+
+Now configure containerd
+
+Since your config.toml contains:
+```
+version = 3
+imports = ['/etc/containerd/conf.d/*.toml']
+```
+This is containerd 2.x configuration. Do not add the Kata runtime directly to /etc/containerd/config.toml. Instead, create a separate configuration file under /etc/containerd/conf.d/. That's what the imports directive is for.
+
+Create a Kata runtime configuration
+```
+sudo mkdir -p /etc/containerd/conf.d
+
+sudo tee /etc/containerd/conf.d/kata.toml >/dev/null <<'EOF'
+[plugins."io.containerd.cri.v1.runtime".containerd.runtimes.kata]
+  runtime_type = "io.containerd.kata.v2"
+EOF
+
+Restart containerd:
+
+sudo systemctl restart containerd
+
+Verify the restart succeeded:
+
+sudo systemctl status containerd --no-pager
+```
+Create the Runtime Class
 `runtimeclass-kata.yaml`
 
 ```yaml
