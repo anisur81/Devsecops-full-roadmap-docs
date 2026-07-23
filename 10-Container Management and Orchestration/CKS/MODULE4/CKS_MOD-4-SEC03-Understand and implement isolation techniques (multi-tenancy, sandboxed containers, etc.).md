@@ -380,15 +380,14 @@ Download the correct package
 export VERSION=3.32.0
 
 wget https://github.com/kata-containers/kata-containers/releases/download/${VERSION}/kata-static-${VERSION}-amd64.tar.zst
-Step 3: Extract it
+
+Extract it
 sudo tar --zstd -xvf kata-static-${VERSION}-amd64.tar.zst -C /
-
 or
-
 zstd -d kata-static-${VERSION}-amd64.tar.zst
 sudo tar -xvf kata-static-${VERSION}-amd64.tar -C /
 ```
-Create the symbolic soft linke using the following command
+Expose the binaries to your default system runtime path by creating symbolic links
 
 ```
 sudo ln -s /opt/kata/bin/kata-runtime /usr/local/bin/kata-runtime
