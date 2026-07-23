@@ -394,6 +394,14 @@ Create the symbolic soft linke using the following command
 sudo ln -s /opt/kata/bin/kata-runtime /usr/local/bin/kata-runtime
 sudo ln -s /opt/kata/bin/containerd-shim-kata-v2 /usr/local/bin/containerd-shim-kata-v2
 ```
+Confirm the installation is completed
+```
+$ find / -name "containerd-shim-kata-v2" 2>/dev/null
+/opt/kata/runtime-rs/bin/containerd-shim-kata-v2
+/opt/kata/bin/containerd-shim-kata-v2
+/usr/local/bin/containerd-shim-kata-v2
+
+```
 
 Check the following parameters
 ```
