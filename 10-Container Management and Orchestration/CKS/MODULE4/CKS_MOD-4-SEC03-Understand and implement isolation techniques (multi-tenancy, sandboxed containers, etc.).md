@@ -388,6 +388,13 @@ or
 zstd -d kata-static-${VERSION}-amd64.tar.zst
 sudo tar -xvf kata-static-${VERSION}-amd64.tar -C /
 ```
+Create the symbolic soft linke using the following command
+
+```
+sudo ln -s /opt/kata/bin/kata-runtime /usr/local/bin/kata-runtime
+sudo ln -s /opt/kata/bin/containerd-shim-kata-v2 /usr/local/bin/containerd-shim-kata-v2
+```
+
 Check the following parameters
 ```
 oracle@dockertest01:~/ISOLATION$ containerd --version
