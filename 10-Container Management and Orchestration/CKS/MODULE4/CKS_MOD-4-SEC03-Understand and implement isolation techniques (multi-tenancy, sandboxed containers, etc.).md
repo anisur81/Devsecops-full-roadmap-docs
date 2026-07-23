@@ -474,26 +474,30 @@ kubectl describe pod
 
 ---
 
-## LAB 8 — gVisor
+## LAB 8 — Install and configure the gVisor in on premises k8s 
 
-### Check runsc
+### Install gVisor on Nodes 
+ ````
+ ARCH=$(uname -m)
+ wget https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}/runsc
+ wget https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}/containerd-shim-runsc-v1
+ chmod +x runsc
+ chmod +x containerd-shim-runsc-v1
+ sudo mv runsc /usr/local/bin/
+ sudo mv containerd-shim-runsc-v1 /usr/local/bin/
+ hash -r
+ runsc --version
+ 
+ sudo tee /etc/containerd/conf.d/99-runsc.toml >/dev/null <<'EOF'
+[plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runsc]
+  runtime_type = "io.containerd.runsc.v1"
+EOF
 
-```bash
-runsc --version
-```
-
-### Configure containerd
-
-```toml
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runsc]
-runtime_type = "io.containerd.runsc.v1"
-```
-
-Restart containerd:
-
-```bash
-systemctl restart containerd
-```
+ sudo systemctl restart containerd
+ 
+ Verify installation
+ runsc --version
+ ``` 
 
 ### RuntimeClass
 
