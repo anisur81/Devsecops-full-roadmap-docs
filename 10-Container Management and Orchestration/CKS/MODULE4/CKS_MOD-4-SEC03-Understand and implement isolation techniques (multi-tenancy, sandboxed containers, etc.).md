@@ -519,37 +519,20 @@ spec:
 
 Verify:
 
-```bash
+``` 
 kubectl get runtimeclass
-kubectl describe pod
 ```
+Create sample pod using the gvisor runtimeclass
 
----
+$ cat runtimeclass-gvisor.yaml
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
 
-## LAB 9 — Verify Isolation (End-to-End Checklist)
-
-```bash
-# Namespace isolation
-kubectl get pods -A
-
-# Quotas
-kubectl describe quota -A
-
-# LimitRange
-kubectl describe limitrange -A
-
-# Runtime isolation
-kubectl get runtimeclass
-
-# RBAC
-kubectl auth can-i list pods --as=system:serviceaccount:tenant-a:tenant-user -n tenant-a
-kubectl auth can-i list pods --as=system:serviceaccount:tenant-a:tenant-user -n tenant-b
-
-# NetworkPolicy
-kubectl get networkpolicy -A
-
-# Node placement (anti-affinity)
-kubectl get pods -o wide
+$ kubectl apply -f runtimeclass-gvisor.yaml
+$ kubectl describe pod
 ```
 
 ---
@@ -587,16 +570,4 @@ kubectl get pods -o wide
 | gVisor | User-space kernel (syscall) isolation | `RuntimeClass` + `runsc` |
 
 ---
-
-## Study Flow Summary
-
-This progression mirrors the CKS exam objectives:
-
-1. Start with **namespace-based multi-tenancy**.
-2. Add **API isolation** (RBAC), **network isolation** (NetworkPolicy), and **resource isolation** (ResourceQuota/LimitRange).
-3. Enforce **scheduling isolation** with pod anti-affinity and node isolation (taints/labels).
-4. Finish with **sandboxed runtimes** (Kata Containers or gVisor) for the strongest workload-level isolation.
-
----
-
-*End of module — practice each lab in order on a multi-node cluster (e.g., `kind` with 2+ workers) for the most realistic exam simulation.*
+ 
