@@ -9,7 +9,6 @@ You will learn how to:
 * Use Multi-stage builds
 * Remove unnecessary packages
 * Scan images
-* Deploy into Kubernetes
 * Verify image size and attack surface
 
  
@@ -183,7 +182,7 @@ docker images slim-lab:v5
 
 ---
 
-Scan Images
+## Step 6: Scan Images
 
 Install Trivy
 
@@ -224,7 +223,7 @@ LOW: 30
 ```
 
 ---
-## Step 6: Compare All Results
+## Step 7: Compare All Results
 
 ```bash
 docker images slim-lab
