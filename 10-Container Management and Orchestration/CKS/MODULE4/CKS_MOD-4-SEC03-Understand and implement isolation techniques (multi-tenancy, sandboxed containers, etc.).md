@@ -471,13 +471,13 @@ Verify:
 kubectl get runtimeclass
 kubectl describe pod
 ```
-
 ---
 
 ## LAB 8 — Install and configure the gVisor in on premises k8s 
 
 ### Install gVisor on Nodes 
- ````
+ 
+ ```
  ARCH=$(uname -m)
  wget https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}/runsc
  wget https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}/containerd-shim-runsc-v1
@@ -497,11 +497,12 @@ EOF
  
  Verify installation
  runsc --version
+
  ``` 
 
-### RuntimeClass
+### Create the RuntimeClass for the gvisor
 
-```yaml
+```
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
