@@ -475,6 +475,35 @@ kubectl describe pod
 
 ## LAB 8 — Install and configure the gVisor in on premises k8s 
 
+## Side by Side Comparison 
+
+```
+
+┌─────────────────────────────┐         ┌─────────────────────────────┐
+│     Standard Container       │         │   gVisor Sandboxed Container │
+├─────────────────────────────┤         ├─────────────────────────────┤
+│ 📱 Application               │         │ 📱 Application              │
+└─────────────┬───────────────┘         └─────────────┬───────────────┘
+              │ Syscalls                              │ Syscalls
+              ▼                                       ▼
+                                        ┌──────────────────────────┐
+                                        │ 🔒 gVisor Sentry         │
+                                        │ User-space Kernel        │
+                                        │ Implements Linux API     │
+                                        └───────────┬──────────────┘
+                                                    │
+                                      Limited & filtered syscalls
+                                                    ▼
+┌─────────────────────────────┐         ┌─────────────────────────────┐
+│ 🐧 Host Linux Kernel         │◄────────│ 🐧 Host Linux Kernel        │
+│ Shared directly              │         │ Reduced interaction         │
+└─────────────┬───────────────┘         └─────────────┬───────────────┘
+              │                                       │
+              ▼                                       ▼
+      Physical Hardware                      Physical Hardware
+
+```
+
 ### Install gVisor on Nodes 
  
  ```
