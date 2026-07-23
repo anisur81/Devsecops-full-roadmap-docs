@@ -1,7 +1,7 @@
 # Understand Your Supply Chain (SBOM, CI/CD, Artifact Repositories)
 
 
-You should understand:
+You should understand: 
 
 * Minimize base image footprint
 * Generate and use SBOM (Software Bill of Materials)
