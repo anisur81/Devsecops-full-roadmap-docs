@@ -541,12 +541,6 @@ Sensitive file opened for reading by non-trusted program
 
 ---
 
-# Relation to CVE-2019-11246 Detection
-
-Sysdig's write-up on CVE-2019-11246 demonstrates using Falco to detect exploitation attempts against `kubectl cp` by watching runtime behavior rather than relying solely on vulnerability scans — for example, alerting on suspicious process execution or abnormal file writes that accompany exploitation. This complements preventive controls (patching, admission control) by providing runtime detection of exploitation *attempts*, including against vulnerabilities that haven't been patched yet.
-
----
-
 # CKS Exam Tips
 
 * Know how to install Falco using Helm and where its config/rules live.
@@ -569,17 +563,6 @@ Sysdig's write-up on CVE-2019-11246 demonstrates using Falco to detect exploitat
 * Falco default rules reference: <https://falco.org/docs/reference/rules/default-rules/>
 * Sysdig blog (CVE-2019-11246 detection with Falco): <https://sysdig.com/blog/how-to-detect-kubernetes-vulnerability-cve-2019-11246-using-falco/>
 * Kubernetes security monitoring at scale with Falco: <https://medium.com/@SkyscannerEng/kubernetes-security-monitoring-at-scale-with-sysdig-falco-a60cfdb0f67a>
-
-These labs closely reflect the runtime security scenarios commonly tested in the CKS exam.
-
 ---
 
-## Summary of changes from the original version
-
-* Fixed a pod-naming inconsistency: the original referenced a literal `nginx-pod`, but a Deployment generates a randomized pod name — added `kubectl get pods -l app=nginx` / a `$POD` variable throughout.
-* Corrected the Falco install/upgrade guidance for loading custom rules to use Helm's `customRules` values (ConfigMap-managed) instead of implying a raw file edit inside a running pod.
-* Softened Lab 7 (crypto-miner) and Lab 8 (file deletion) claims, since these aren't guaranteed default-rule hits — added notes on what actually triggers detection.
-* Added a note to Lab 4 about Pod Security Admission potentially blocking the privileged pod before Falco ever sees it.
-* Clarified in Lab 9 that a `hostPath` mount to `/` does **not** require `privileged: true`, which is itself a key CKS point.
-* Corrected the CVE-2019-11246 description (it concerns `kubectl cp` path traversal, not general API interactions).
-* Added a closing note that exact Falco default rule names can differ by ruleset version, since the exam tests behavior recognition rather than verbatim rule/alert text.
+ 
