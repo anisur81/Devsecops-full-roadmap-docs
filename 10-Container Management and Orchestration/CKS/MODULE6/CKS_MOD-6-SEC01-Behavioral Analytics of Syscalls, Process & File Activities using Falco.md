@@ -48,6 +48,19 @@ Kernel Syscalls
 
 ---
 
+# Step 0: Install Helm
+
+Install Helm (Recommended)
+
+Run:
+
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+Verify:
+
+helm version
+
+
 # Step 1: Install Falco
 
 Add the Helm repository:
