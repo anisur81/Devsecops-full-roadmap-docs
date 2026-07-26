@@ -78,6 +78,15 @@ helm install falco falcosecurity/falco \
   --create-namespace \
   --set tty=true
 ```
+If  cluster has OPA Gatekeeper enforcing a policy (must-have-owner) that requires every pod to have an owner label — and the Falco chart's pod template doesn't set one by default, so Gatekeeper is rejecting pod creation outright
+
+```
+helm upgrade falco falcosecurity/falco \
+  --namespace falco \
+  --set tty=true \
+  --set podLabels."owner"=jasper
+  ```
+
 
 > **Note:** `--set tty=true` is useful in lab/demo environments so `kubectl logs -f` streams alerts to stdout immediately without buffering.
 
