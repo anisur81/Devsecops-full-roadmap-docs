@@ -344,6 +344,39 @@ spec:
           - X(hostPath): "null"
 ```
 
+Create a sample hostpod with mount path
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-test
+  namespace: production
+  labels:
+    owner: jasper
+spec:
+  containers:
+  - name: hostpath-test
+    image: nginx
+    volumeMounts:
+    - mountPath: /host
+      name: host
+  volumes:
+  - name: host
+    hostPath:
+      path: /
+```
+
+Apply and check
+```
+kubectl apply -f hostpath.yaml
+kubectl get pods -n production -w
+```
+If you want to confirm the mount actually worked once it's running:
+```
+bashkubectl exec -it nginx-f679cd76f-79x6k -n production -- ls /host
+```
+
 3. Where host access is genuinely required, use a scoped, read-only mount and restrict via `AppArmor`/`SELinux` profiles instead of raw root mounts.
 4. Audit the node filesystem for changes made during the exposure window.
 
