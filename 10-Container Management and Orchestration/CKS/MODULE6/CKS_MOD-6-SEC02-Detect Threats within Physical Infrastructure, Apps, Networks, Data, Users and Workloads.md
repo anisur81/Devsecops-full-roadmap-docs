@@ -185,6 +185,40 @@ kubectl delete pod hacker
 ```
 
 2. Block privileged pods cluster-wide with a Kyverno policy (or Pod Security Admission):
+ 
+ 
+The `ClusterPolicy` CRD (Custom Resource Definition) that defines this resource type doesn't exist yet. 
+You can't create a `ClusterPolicy` object until the Kyverno controller and its CRDs are deployed.
+
+**1. Confirm it's really not installed:**
+```bash
+kubectl get crd | grep kyverno
+kubectl get ns | grep kyverno
+```
+
+**2. Install Kyverno (via Helm, the standard approach):**
+```bash
+helm repo add kyverno https://kyverno.github.io/kyverno/
+helm repo update
+
+helm install kyverno kyverno/kyverno -n kyverno --create-namespace
+```
+
+**3. Wait for it to be ready:**
+```bash
+kubectl wait --for=condition=Ready pods --all -n kyverno --timeout=120s
+kubectl get pods -n kyverno
+```
+
+**4. Confirm the CRDs now exist:**
+```bash
+kubectl get crd | grep kyverno
+```
+You should see `clusterpolicies.kyverno.io` in the list among others.
+
+**5. Now apply your policy:**
+
+Create the cluster policy yaml file
 
 ```yaml
 apiVersion: kyverno.io/v1
@@ -206,6 +240,27 @@ spec:
           containers:
           - =(securityContext):
               =(privileged): "false"
+```
+
+```bash
+kubectl apply -f clstrplc.yaml
+kubectl get clusterpolicy
+```
+
+One thing worth flagging on the policy itself once it's applied — your pattern:
+```yaml
+=(securityContext):
+  =(privileged): "false"
+```
+ 
+Verifiy the privileged pod using the following command
+
+```bash
+# should be blocked
+kubectl run test-priv --image=nginx --overrides='{"spec":{"containers":[{"name":"test-priv","image":"nginx","securityContext":{"privileged":true}}]}}' --restart=Never
+
+# should succeed
+kubectl run test-safe --image=nginx --restart=Never
 ```
 
 3. Or enable the built-in `restricted` Pod Security Standard on the namespace:
