@@ -1138,15 +1138,4 @@ systemctl restart kubelet
 * **kubectl-who-can / rbac-lookup:** Periodically audit RBAC for privilege creep and wildcard grants.
 
 ---
-
-# General Incident Response Workflow
-
-Use this sequence for any of the labs above once a threat is confirmed:
-
-1. **Contain** — delete/cordon the offending pod, node, or credential.
-2. **Preserve evidence** — capture `kubectl describe`, audit log excerpts, and Falco alerts before cleanup.
-3. **Eradicate** — rotate secrets/tokens, remove backdoor bindings, rebuild affected images/nodes.
-4. **Recover** — redeploy clean workloads, re-enable traffic gradually, verify NetworkPolicy/RBAC are correctly scoped.
-5. **Lessons learned** — turn the detection into a permanent Falco rule, Kyverno policy, or alert so the same technique is blocked/caught automatically next time.
-
-These labs closely align with the threat modeling guidance from Trend Micro and the MITRE ATT&CK Matrix for Kubernetes, covering common attack paths, the runtime detection techniques, and the remediation steps expected for the CKS exam.
+ 
