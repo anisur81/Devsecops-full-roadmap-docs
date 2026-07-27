@@ -73,6 +73,8 @@ kind: Deployment
 metadata:
   name: nginx
   namespace: production
+  labels:
+     owner: mitre
 
 spec:
   replicas: 1
@@ -85,12 +87,14 @@ spec:
     metadata:
       labels:
         app: nginx
+        owner: mitre
 
     spec:
       containers:
 
       - name: nginx
         image: nginx
+
 ```
 
 Apply
