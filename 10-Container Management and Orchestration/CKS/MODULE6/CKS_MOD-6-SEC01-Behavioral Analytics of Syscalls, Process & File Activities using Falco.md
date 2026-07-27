@@ -450,17 +450,12 @@ Falco flags these via the same **Terminal shell in container** / suspicious-bina
 
 ---
 
-# Writing Custom Falco Rules
+# Behavioral activities using Custom Falco Rules
 
-Create a custom rule file:
+1. Create custom-rules.yaml (reference file, not deployed directly)
 
-```bash
-vi custom-rules.yaml
 ```
-
-Example:
-
-```yaml
+cat > custom-rules.yaml << 'EOF'
 - rule: Detect Curl Execution
   desc: Detect curl inside containers
   condition: spawned_process and container and proc.name = "curl"
@@ -469,35 +464,73 @@ Example:
     (user=%user.name command=%proc.cmdline container=%container.name)
   priority: WARNING
   tags: [container]
+EOF
 ```
 
-Load it via Helm values (recommended over hand-editing files in a running pod, since the Helm chart manages a ConfigMap):
+2. Build values.yaml with the rule embedded + the required owner label
 
-```bash
-helm upgrade falco falcosecurity/falco \
-  --namespace falco \
-  --set-file customRules."custom-rules\.yaml"=custom-rules.yaml
+```   
+ cat > values.yaml << 'EOF'
+customRules:
+  custom-rules.yaml: |-
+    - rule: Detect Curl Execution
+      desc: Detect curl inside containers
+      condition: spawned_process and container and proc.name = "curl"
+      output: >
+        Curl executed in container
+        (user=%user.name command=%proc.cmdline container=%container.name)
+      priority: WARNING
+      tags: [container]
+
+podLabels:
+  owner: jasper
+EOF
 ```
 
-This mounts your rule into the Falco pods (typically under `/etc/falco/rules.d/` or as an additional rules file, depending on chart version) and updates the underlying ConfigMap. A `helm upgrade` will roll the DaemonSet automatically; if you edited the ConfigMap directly instead, restart manually:
 
-```bash
-kubectl rollout restart daemonset falco -n falco
-```
-
-Test:
-
-```bash
-kubectl exec -it $POD -- curl google.com
-```
-
-Alert:
+3. Deploy/upgrade via Helm
 
 ```
-Warning Curl executed in container
-(user=root command=curl google.com container=nginx)
+helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm repo update
+
+helm upgrade --install falco falcosecurity/falco \
+  -n falco --create-namespace \
+  -f values.yaml
 ```
 
+4. Confirm the rollout completes clean
+
+
+```
+
+kubectl rollout status daemonset/falco -n falco
+kubectl get pods -n falco -o wide
+
+```
+Expect 3 out of 3 new pods updated and all 3 pods Running with no Gatekeeper FailedCreate events.
+
+5. Verify the rules loaded
+
+```
+kubectl logs -n falco daemonset/falco -c falco | grep -A5 "Loading rules"
+
+Expect:
+Loading rules from:
+   /etc/falco/falco_rules.yaml | schema validation: ok
+   /etc/falco/rules.d/custom-rules.yaml | schema validation: ok
+ 
+```
+6. Trigger and confirm the alert
+
+```
+POD=$(kubectl get pods -n falco -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -it $POD -n falco -- curl google.com
+
+kubectl logs -n falco daemonset/falco -c falco -f | grep -i curl
+Expect:
+Warning Curl executed in container (user=root command=curl google.com container=falco) ...
+```   
 ---
 
 # Viewing Events
