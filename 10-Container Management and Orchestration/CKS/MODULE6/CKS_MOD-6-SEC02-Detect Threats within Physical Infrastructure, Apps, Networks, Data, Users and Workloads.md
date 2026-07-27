@@ -262,16 +262,6 @@ kubectl run test-priv --image=nginx --overrides='{"spec":{"containers":[{"name":
 # should succeed
 kubectl run test-safe --image=nginx --restart=Never
 ```
-
-3. Or enable the built-in `restricted` Pod Security Standard on the namespace:
-
-```bash
-kubectl label ns production \
-  pod-security.kubernetes.io/enforce=restricted
-```
-
-4. Rotate any credentials/service account tokens the pod could have accessed while running.
-
 ---
 
 # Lab 2 — Detect HostPath Mount
