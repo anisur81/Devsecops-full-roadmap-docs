@@ -58,9 +58,15 @@ several common exam patterns: ignoring noisy system traffic, logging secrets acc
 metadata level only (never body, for security), and logging everything else at
 `RequestResponse`.
 
-```yaml
+``` 
 apiVersion: audit.k8s.io/v1
 kind: Policy
+
+# Skip the duplicate "RequestReceived" stage event for every request;
+# we only care about the outcome (ResponseComplete etc.)
+omitStages:
+  - "RequestReceived"
+
 rules:
   # Don't log read-only requests to non-resource URLs (health checks etc.)
   - level: None
@@ -70,10 +76,29 @@ rules:
       - "/metrics"
     verbs: ["get", "watch", "list"]
 
-  # Don't log requests from the system:kube-proxy user
+  # Don't log requests from noisy system components
   - level: None
     users:
       - "system:kube-proxy"
+      - "system:kube-scheduler"
+      - "system:kube-controller-manager"
+    verbs: ["get", "watch", "list"]
+
+  # Don't log kubelet (node) traffic — very high volume, low audit value
+  - level: None
+    userGroups:
+      - "system:nodes"
+    verbs: ["get", "watch", "list"]
+
+  # Don't log churny housekeeping objects (leader election / heartbeats)
+  - level: None
+    resources:
+      - group: ""
+        resources: ["endpoints"]
+      - group: "coordination.k8s.io"
+        resources: ["leases"]
+    namespaces: ["kube-system"]
+    verbs: ["get", "watch", "list", "update"]
 
   # Log Secrets and ConfigMaps access at Metadata level only
   # (never capture body content — avoids leaking sensitive data into logs)
@@ -94,6 +119,7 @@ rules:
 
   # Catch-all: log metadata for everything else
   - level: Metadata
+ 
 ```
 
 **Exam tip:** Policy rules are evaluated **top to bottom**, first match wins. Put the
