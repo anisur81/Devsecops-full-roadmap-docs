@@ -68,6 +68,7 @@ rules:
       - "/healthz*"
       - "/version"
       - "/metrics"
+    verbs: ["get", "watch", "list"]
 
   # Don't log requests from the system:kube-proxy user
   - level: None
