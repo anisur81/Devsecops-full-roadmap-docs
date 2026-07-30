@@ -63,10 +63,12 @@ omitStages:
 rules:
   # Don't log read-only requests to non-resource URLs (health checks etc.)
   - level: None
+    userGroups: ["system:authenticated"]
     nonResourceURLs:
       - "/healthz*"
       - "/version"
       - "/metrics"
+      - "/api*"
     verbs: ["get", "watch", "list"]
 
   # Don't log requests from noisy system components
@@ -76,6 +78,9 @@ rules:
       - "system:kube-scheduler"
       - "system:kube-controller-manager"
     verbs: ["get", "watch", "list"]
+    resources:
+    - group: "" # core API group
+      resources: ["endpoints", "services"]
 
   # Don't log kubelet (node) traffic — very high volume, low audit value
   - level: None
@@ -93,12 +98,25 @@ rules:
     namespaces: ["kube-system"]
     verbs: ["get", "watch", "list", "update"]
 
+# Don't log requests to a configmap called "controller-leader"
+  - level: None
+    resources:
+    - group: ""
+      resources: ["configmaps"]
+      resourceNames: ["controller-leader"]
+
   # Log Secrets and ConfigMaps access at Metadata level only
   # (never capture body content — avoids leaking sensitive data into logs)
   - level: Metadata
     resources:
       - group: ""
         resources: ["secrets", "configmaps"]
+
+ # Log "pods/log", "pods/status" at Metadata level
+  - level: Metadata
+    resources:
+    - group: ""
+      resources: ["pods/log", "pods/status"]
 
   # Log pod exec / attach / portforward at RequestResponse (high risk actions)
   - level: RequestResponse
@@ -112,6 +130,14 @@ rules:
 
   # Catch-all: log metadata for everything else
   - level: Metadata
+
+ # A catch-all rule to log all other requests at the Metadata level.
+  - level: Metadata
+    # Long-running requests like watches that fall under this rule will not
+    # generate an audit event in RequestReceived.
+    omitStages:
+      - "RequestReceived"
+
  
 ```
 
