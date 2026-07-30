@@ -51,12 +51,19 @@ spec:
         drop:
         - ALL
 ```
+### emptyDir gives you disposable, Pod-scoped writable storage — letting you keep the container image and root filesystem immutable while still satisfying an application's need to write temporary data somewhere.
 
-> **Note:** `nginx` normally needs to write to `/var/cache/nginx`,
-> `/var/run`, and needs root to bind port 80. On the real exam, if a task
-> asks you to make a *specific* image immutable, you may also need to:
-> - add `emptyDir` volumes for directories the app must write to (e.g. `/tmp`, `/var/cache/nginx`)
-> - change the listening port to a non-privileged port (>1024) if `runAsNonRoot` is enforced
+## Key characteristics to remember for EmptyDir
+
+| Aspect | Behavior |
+|---|---|
+| Persistence | None — tied to Pod lifetime only |
+| Data survives container restart | Yes |
+| Data survives Pod deletion/reschedule | No |
+| Shared across containers in Pod | Yes |
+| Backing storage | Node disk (default) or RAM (`medium: Memory`) |
+| Use case | Cache, temp files, sockets, PID files, inter-container scratch space |
+
 
 Example with writable scratch space via `emptyDir`:
 
