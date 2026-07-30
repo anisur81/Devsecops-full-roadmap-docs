@@ -1,7 +1,4 @@
-# Kubernetes Audit Logs — Monitoring Access
-
-**Exam domain:** Monitoring, Logging and Runtime Security
-**Topic:** Use Kubernetes audit logs to monitor access
+# Use Kubernetes audit logs to monitor access
 
 ---
 
@@ -18,7 +15,7 @@ Key pieces you must know for the exam:
 |---|---|
 | **Audit Policy** | Defines *what* gets logged and at *what level* (`None`, `Metadata`, `Request`, `RequestResponse`) |
 | **Audit Backend** | Defines *where* logs go: `log` (file) or `webhook` |
-| **kube-apiserver flags** | Wire the policy file and backend into the API server |
+| **kube-apiserver flags** | Wire the policy file and backend into the Kube API server |
 | **Audit stages** | `RequestReceived`, `ResponseStarted`, `ResponseComplete`, `Panic` |
 
 Audit levels (least to most verbose):
@@ -31,8 +28,7 @@ Audit levels (least to most verbose):
 
 ## 2. Lab Environment Assumptions
 
-This lab assumes a `kubeadm`-based cluster where you have SSH/root access to the
-control-plane node (typical CKS exam setup, e.g. via `ssh cluster1-controlplane1`).
+This lab assumes a `kubeadm`-based cluster where you have SSH/root access to the control-plane node  
 
 Verify the API server is static-pod managed:
 
@@ -53,10 +49,7 @@ sudo mkdir -p /var/log/kubernetes/audit
 
 ### Step 2 — Write an Audit Policy file
 
-Create `/etc/kubernetes/audit-policy/policy.yaml`. This example policy demonstrates
-several common exam patterns: ignoring noisy system traffic, logging secrets access at
-metadata level only (never body, for security), and logging everything else at
-`RequestResponse`.
+Create `/etc/kubernetes/audit-policy/policy.yaml`.  
 
 ``` 
 apiVersion: audit.k8s.io/v1
@@ -122,8 +115,7 @@ rules:
  
 ```
 
-**Exam tip:** Policy rules are evaluated **top to bottom**, first match wins. Put the
-most specific `None`/exclusion rules first, and a catch-all rule last.
+**Exam tip:** Policy rules are evaluated **top to bottom**, first match wins. Put the most specific `None`/exclusion rules first, and a catch-all rule last.
 
 ### Step 3 — Edit the kube-apiserver static pod manifest
 
@@ -165,8 +157,7 @@ Add matching `volumes`:
         type: DirectoryOrCreate
 ```
 
-Save the file. Because it's a static pod, kubelet detects the change automatically and
-restarts `kube-apiserver` — no `kubectl apply` needed.
+Save the file. Because it's a static pod, kubelet detects the change automatically and restarts `kube-apiserver` — no `kubectl apply` needed.
 
 ### Step 4 — Verify the API server restarted successfully
 
@@ -175,8 +166,7 @@ watch crictl ps       # wait for a fresh kube-apiserver container
 kubectl get pods -n kube-system | grep apiserver
 ```
 
-If it doesn't come back up, check `crictl logs <container-id>` — a common exam mistake
-is a typo in the flag or a policy YAML syntax error.
+If it doesn't come back up, check `crictl logs <container-id>` — a common exam mistake is a typo in the flag or a policy YAML syntax error.
 
 ### Step 5 — Generate some traffic to audit
 
@@ -286,19 +276,14 @@ Note: exclusion rules must come **before** the catch-all rule, since first match
 
 ## 5. Common Exam Pitfalls
 
-- Forgetting to mount both the **policy file directory** and the **log output directory**
-  as volumes in the static pod — the apiserver will crash-loop with a "no such file"
-  error.
-- Wrong `apiVersion` in the policy (`audit.k8s.io/v1` is current; older exam guides show
-  `v1beta1`, which will fail on modern clusters).
+- Forgetting to mount both the **policy file directory** and the **log output directory**   as volumes in the static pod — the apiserver will crash-loop with a "no such file"  error.
+- Wrong `apiVersion` in the policy (`audit.k8s.io/v1` is current; older exam guides show   `v1beta1`, which will fail on modern clusters).
 - Forgetting that after editing a static pod manifest you do **not** run `kubectl apply` —
   the kubelet watches the manifests directory directly.
-- Putting the catch-all `level: Metadata` rule **first**, which silently makes all your
-  more specific rules below it unreachable (first match wins, so order matters).
+- Putting the catch-all `level: Metadata` rule **first**, which silently makes all your more specific rules below it unreachable (first match wins, so order matters).
 - Not verifying the apiserver actually came back up before assuming the task is done —
   always `crictl ps` / `kubectl get pods -n kube-system` after editing.
-- Using `--audit-log-path=-` sends logs to stdout instead of a file — useful to know if
-  the task asks for stdout logging specifically.
+- Using `--audit-log-path=-` sends logs to stdout instead of a file — useful to know if the task asks for stdout logging specifically.
 
 ---
 
