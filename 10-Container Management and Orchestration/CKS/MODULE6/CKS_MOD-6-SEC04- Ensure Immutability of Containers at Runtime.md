@@ -308,6 +308,4 @@ kubectl label ns <namespace> pod-security.kubernetes.io/enforce=restricted
 - [ ] Know how to verify immutability at runtime via `kubectl exec`
 - [ ] Know Pod Security Admission labels for enforcing `restricted` at the
       namespace level
-- [ ] Be fast at editing existing YAML/manifests under time pressure —
-      practice adding these fields to an already-running workload's spec
-      and redeploying
+ 
