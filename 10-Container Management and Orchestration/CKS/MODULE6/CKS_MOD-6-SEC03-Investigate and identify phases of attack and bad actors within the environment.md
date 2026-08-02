@@ -371,7 +371,7 @@ If `developer` was never supposed to have `create` on `pods` or `get` on `secret
 # Lab 5 – Investigate Using Falco
 
 ## For a detailed, step-by-step guide, please follow the complete documentation here:
-[Behavioral Analytics of Syscalls, Process & File Activities using Falco](https://github.com/anisur81/Devsecops-full-roadmap-docs/blob/main/10-Container%20Management%20and%20Orchestration/CKS/MODULE6/CKS_MOD-6-SEC01-Behavioral%20Analytics%20of%20Syscalls%2C%20Process%20%26%20File%20Activities%20using%20Falco.md)
+[Behavioral Analytics of Syscalls, Process & File Activities using Falco](https://github.com/anisur81/Devsecops-full-roadmap-docs/blob/main/10-Container%20Management%20and%20Orchestration/CKS/MODULE6/CKS_MOD-6-SEC01-Perform%20behavioral%20analytics%20to%20detect%20malicious%20activities.md)
  
 ---
 
