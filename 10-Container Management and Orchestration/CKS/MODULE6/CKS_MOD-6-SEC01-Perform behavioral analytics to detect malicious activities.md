@@ -1,10 +1,7 @@
-# Behavioral Analytics of Syscalls, Process & File Activities using Falco
+# Perform behavioral analytics to detect malicious activities
 
-This lab covers the CKS objective:
-
+ 
 > **Perform behavioral analytics of syscall process and file activities at the host and container level to detect malicious activities.**
-
-The primary tool for CKS is **Falco**, an open-source CNCF runtime security engine that monitors Linux syscalls using eBPF (or a kernel module) to detect suspicious behavior.
 
 ---
 
@@ -28,11 +25,11 @@ After completing this lab, you will be able to:
 
 Minimum requirements:
 
-* Ubuntu 22.04
+* Ubuntu 26.04
 * Kubernetes v1.30+
 * kubectl
 * Helm
-* Kind or Minikube
+
 
 ```
 Ubuntu
