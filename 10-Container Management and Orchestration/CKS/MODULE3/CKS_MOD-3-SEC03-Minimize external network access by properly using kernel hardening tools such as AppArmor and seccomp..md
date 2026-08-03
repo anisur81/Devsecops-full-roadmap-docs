@@ -1,5 +1,7 @@
 
-# Kernel Hardening with AppArmor & seccomp
+# Part A: 
+
+## Kernel Hardening with AppArmor and seccomp
 
 
 Goal: Practice restricting container syscalls and file/capability access using seccomp and AppArmor.
@@ -317,5 +319,167 @@ sudo apparmor_parser -R /etc/apparmor.d/k8s-deny-write
 sudo rm /etc/apparmor.d/k8s-deny-write
 sudo rm -f /var/lib/kubelet/seccomp/profiles/audit.json /var/lib/kubelet/seccomp/profiles/violation.json
 ```
+
+
+# Part A — Restrict Service Exposure
+
+## Lab 1 — Create Namespace
+
+```bash
+kubectl create namespace security
+```
+
+Verify:
+
+```bash
+kubectl get ns
+```
+
+## Lab 2 — Deploy a Sample Application
+
+```bash
+kubectl create deployment nginx --image=nginx -n security
+```
+
+Expose it internally only:
+
+```bash
+kubectl expose deployment nginx --port=80 --target-port=80 --type=ClusterIP -n security
+```
+
+Verify:
+
+```bash
+kubectl get all -n security
+```
+
+## Lab 3 — Create a LoadBalancer Service (the risk)
+
+By default, any developer with namespace access can expose an app externally:
+
+```bash
+kubectl expose deployment nginx --type=LoadBalancer --port=80 -n security
+```
+
+```bash
+kubectl get svc -n security
+```
+
+This creates a public-facing `EXTERNAL-IP` (or `<pending>` on bare-metal without a cloud LB controller) — this is exactly the exposure we want to prevent.
+
+## Lab 4 — Block LoadBalancer Services with ResourceQuota
+
+Clean up first:
+
+```bash
+kubectl delete svc nginx -n security
+```
+
+`quota.yaml`:
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: service-quota
+  namespace: security
+spec:
+  hard:
+    services.loadbalancers: "0"
+    services.nodeports: "0"     # optional: also block NodePort if required
+```
+
+Apply and verify:
+
+```bash
+kubectl apply -f quota.yaml
+kubectl get resourcequota -n security
+kubectl describe resourcequota service-quota -n security
+```
+
+Expected output includes:
+
+```
+Resource                 Used  Hard
+--------                 ----  ----
+services.loadbalancers   0     0
+```
+
+## Lab 5 — Verify the Restriction
+
+```bash
+kubectl expose deployment nginx --type=LoadBalancer --port=80 -n security
+```
+
+Expected result:
+
+```
+Error from server (Forbidden): error when creating ...: services.loadbalancers "nginx" is forbidden:
+exceeded quota: service-quota, requested: services.loadbalancers=1,
+used: services.loadbalancers=0, limited: services.loadbalancers=0
+```
+
+## Lab 6 — Confirm ClusterIP Still Works
+
+```bash
+kubectl expose deployment nginx --type=ClusterIP --port=80 -n security
+kubectl get svc -n security
+```
+
+`ClusterIP` is unaffected by the `services.loadbalancers` quota.
+
+## Lab 7 — NodePort Behavior
+
+If you set `services.nodeports: "0"` in Lab 4, this will also be blocked:
+
+```bash
+kubectl delete svc nginx -n security
+kubectl expose deployment nginx --type=NodePort --port=80 -n security
+```
+
+Expected (if quota includes NodePort):
+
+```
+Error from server (Forbidden): exceeded quota: service-quota
+```
+
+If you only quota'd `services.loadbalancers`, NodePort creation will still succeed — decide deliberately based on the exam scenario's wording.
+
+## Lab 8 — Restrict LoadBalancer Source IP Ranges
+
+Where you can't fully block `LoadBalancer` Services but need to restrict *who* can reach them, use `loadBalancerSourceRanges` (enforced by the cloud provider's LB / security group, not by Kubernetes itself — so it only works on cloud providers that honor this field):
+
+`service.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: secure-service
+  namespace: security
+spec:
+  selector:
+    app: nginx
+  type: LoadBalancer
+  loadBalancerSourceRanges:
+    - 192.168.10.0/24
+  ports:
+    - port: 80
+      targetPort: 80
+```
+
+```bash
+kubectl apply -f service.yaml
+kubectl describe svc secure-service -n security
+```
+
+Expected:
+
+```
+LoadBalancer Ingress:     <provider-assigned-ip>
+LoadBalancer Source Ranges: 192.168.10.0/24
+```
+
+Only that subnet is allowed to reach the LB (per cloud provider enforcement — on bare metal / kind clusters this field is accepted but not enforced without MetalLB or similar).
 
 ---
