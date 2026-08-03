@@ -1,16 +1,25 @@
 
-# Part A: 
+# Part A- Kernel Hardening with AppArmor and seccomp
 
-## Kernel Hardening with AppArmor and seccomp
-
-
-Goal: Practice restricting container syscalls and file/capability access using seccomp and AppArmor.
+Goal: Restrict a container's ability to make outbound network calls (and reduce its syscall attack surface) using AppArmor mandatory access control and seccomp syscall filtering — two host-level kernel hardening tools frequently tested on CKS..
 
 
-> Prerequisites: A running Kubernetes cluster where you control the **nodes** 
-(kubeadm cluster, kind is NOT sufficient for AppArmor since it needs host kernel support). 
-Nodes must run a Linux distro with AppArmor enabled (Ubuntu/Debian). 
-For seccomp, any Linux node with a kernel >= 3.5 works (seccomp is enabled via kubelet, no special kernel module needed like AppArmor).
+## 0. Prerequisites
+
+- A running kubelet node where you have root/sudo access (kubeadm cluster,
+  minikube with `--driver=none`/vm driver, or a KillerCoda/killer.sh style CKS
+  simulator). AppArmor profiles are **node-local** — loaded on the node, not
+  distributed by Kubernetes.
+- Node OS must support AppArmor (Ubuntu/Debian do by default; check with
+  `sudo aa-status`). If AppArmor isn't available, skip to Part 2 (seccomp is
+  supported on virtually all modern Linux kernels).
+- `kubectl` context pointed at your test cluster.
+
+```bash
+# Quick sanity checks
+sudo aa-status                 # AppArmor loaded profiles / enforce mode
+uname -r                       # kernel version (seccomp needs kernel >= 3.5, standard today)
+kubectl get nodes -o wide
 
 ---
 
@@ -93,6 +102,34 @@ sudo mkdir -p /var/lib/kubelet/seccomp/profiles
   ]
 }
 ```
+#### A good "deny network, allow everything else" pattern for the exam:
+```
+sudo tee /var/lib/kubelet/seccomp/profiles/deny-network.json <<'EOF'
+{
+  "defaultAction": "SCMP_ACT_ALLOW",
+  "syscalls": [
+    {
+      "names": [
+        "socket",
+        "connect",
+        "accept",
+        "accept4",
+        "bind",
+        "listen",
+        "sendto",
+        "sendmsg",
+        "recvfrom",
+        "recvmsg"
+      ],
+      "action": "SCMP_ACT_ERRNO"
+    }
+  ]
+}
+EOF
+
+```
+
+
 
 > `violation.json` is deliberately restrictive: it will **block `unshare`**, `mount`, `ptrace`, etc. because they're not in the allow-list, forcing `SCMP_ACT_ERRNO` (syscall fails with an error) instead of `SCMP_ACT_LOG` (just logs).
 
@@ -128,6 +165,16 @@ kubectl exec -it sc-violation -n seccomp-lab -- sh
 # Inside the pod, try a syscall NOT in the allow-list, e.g.:
 unshare --map-root-user sh
 # Expect: "unshare: unshare failed: Operation not permitted"
+
+or
+
+kubectl exec -it seccomp-net-test -- wget -T 3 http://example.com
+# Expect: bad address / network unreachable — socket() blocked by seccomp
+
+kubectl exec -it seccomp-net-test -- nslookup kubernetes.default
+# Expect: failure — DNS resolution needs socket() too
+
+
 ```
 
 Compare with the `audit.json` profile (logs to node's `dmesg`/audit log but doesn't block) to see the difference between **audit** and **enforce** modes — a common exam distinction.
@@ -143,6 +190,15 @@ grep -i seccomp /var/lib/kubelet/config.yaml 2>/dev/null
 
 # List profiles staged on the node
 ls -l /var/lib/kubelet/seccomp/profiles/
+
+# seccomp
+ls /var/lib/kubelet/seccomp/profiles/
+kubectl exec <pod> -- cat /proc/1/status | grep Seccomp   # 2 = filter active
+
+# General verification
+kubectl describe pod <pod> | grep -A5 "Security Context"
+sudo journalctl -k | grep -Ei "apparmor|seccomp|audit"
+
 ```
 
 ---
@@ -162,7 +218,10 @@ ls -l /var/lib/kubelet/seccomp/profiles/
 **Step 1 — Confirm AppArmor is active on the node:**
 
 ```bash
-sudo aa-status
+# Quick sanity checks
+sudo aa-status                 # AppArmor loaded profiles / enforce mode
+uname -r                       # kernel version (seccomp needs kernel >= 3.5, standard today)
+kubectl get nodes -o wide
 ```
 
 **Step 2 — Write a profile that denies all file writes:**
@@ -180,13 +239,49 @@ profile k8s-deny-write flags=(attach_disconnected) {
 }
 EOF
 ```
+### OR
+## Create the profile on every node that will run the workload:
+
+sudo tee /etc/apparmor.d/k8s-deny-network <<'EOF'
+#include <tunables/global>
+
+profile k8s-deny-network flags=(attach_disconnected) {
+  #include <abstractions/base>
+
+  # Deny all network activity (address-family level block)
+  deny network,
+
+  # Still allow basic file reads so the app can start
+  file,
+
+  # Explicitly deny access to sensitive host paths
+  deny /etc/shadow r,
+  deny /root/** rwklx,
+
+  # Deny mount/ptrace-style container breakout primitives
+  deny mount,
+  deny ptrace,
+}
+EOF
+
+```
+
 
 **Step 3 — Load it into the kernel:**
 
 ```bash
 sudo apparmor_parser /etc/apparmor.d/k8s-deny-write
 sudo aa-status | grep k8s-deny-write
+
+or
+
+sudo apparmor_parser -r -W /etc/apparmor.d/k8s-deny-network
+
+# Verify it loaded
+sudo aa-status | grep k8s-deny-network
+
 ```
+Repeat Step 1.1–1.2 on every node in the cluster (or use a DaemonSet / config-management tool in real life).
 
 **Step 4a — Reference it from a Pod (Kubernetes 1.30+, native field):**
 
@@ -208,23 +303,7 @@ spec:
         localhostProfile: k8s-deny-write
 ```
 
-**Step 4b — Reference it from a Pod (pre-1.30, annotation-based — still commonly tested):**
-
-```yaml
-# pod-apparmor-annotation.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: aa-deny-write-legacy
-  namespace: seccomp-lab
-  annotations:
-    container.apparmor.security.beta.kubernetes.io/app: localhost/k8s-deny-write
-spec:
-  containers:
-  - name: app
-    image: busybox:1.36
-    command: ["sh", "-c", "sleep 3600"]
-```
+ 
 
 ```bash
 kubectl apply -f pod-apparmor-native.yaml
@@ -238,6 +317,22 @@ kubectl exec -it aa-deny-write -n seccomp-lab -- sh
 # Inside the pod:
 echo "test" > /tmp/testfile
 # Expect: "sh: can't create /tmp/testfile: Permission denied"
+
+
+or
+
+kubectl exec -it apparmor-net-test -- wget -T 3 http://example.com
+# Expect: connection refused / permission denied — network denied by AppArmor
+
+kubectl exec -it apparmor-net-test -- ping -c1 8.8.8.8
+# Expect: Operation not permitted
+
+Check the kernel audit log on the node to confirm AppArmor is the one blocking it:
+
+sudo dmesg | grep -i apparmor | tail -5
+# or
+sudo journalctl -k | grep DENIED
+
 ```
 
 ### 2.3 Troubleshooting checklist (this is where exam time is lost)
@@ -262,56 +357,69 @@ kubectl get pod <pod> -o jsonpath='{.spec.containers[0].securityContext.appArmor
 
 ---
 
-## Part 3 — Combined lab exercise (exam-style task)
-
-**Task:** Create a Pod named `hardened-pod` in namespace `seccomp-lab` that:
-1. Uses image `nginx:1.25`.
-2. Applies the `RuntimeDefault` seccomp profile at the pod level.
-3. Applies the custom AppArmor profile `k8s-deny-write` (deny all writes) at the container level.
-4. Drops **all** Linux capabilities and adds back only `NET_BIND_SERVICE`.
-5. Runs as non-root.
-
-<details>
-<summary>Solution (try it yourself first)</summary>
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: hardened-pod
-  namespace: seccomp-lab
-spec:
-  securityContext:
-    seccompProfile:
-      type: RuntimeDefault
-    runAsNonRoot: true
-    runAsUser: 101
-  containers:
-  - name: nginx
-    image: nginx:1.25
-    securityContext:
-      appArmorProfile:
-        type: Localhost
-        localhostProfile: k8s-deny-write
-      capabilities:
-        drop: ["ALL"]
-        add: ["NET_BIND_SERVICE"]
-    ports:
-    - containerPort: 80
-```
-
-> Note: `k8s-deny-write` as written above will actually break nginx (it needs to write logs/pid files), so in a real answer you'd scope the `deny` rule to specific paths rather than `/** w`. This is intentional — the exam often expects you to **debug why a hardened pod won't start** and loosen the profile appropriately, e.g.:
-> ```
-> deny /etc/** w,
-> allow /var/log/nginx/** w,
-> allow /var/run/nginx.pid w,
-> ```
-
-</details>
+## Part 3 — Combine Both (Defense in Depth)
+A realistic CKS-style task: "Harden pod restricted-app so it cannot make any outbound network calls, using both AppArmor and seccomp."
 
 ---
 
-## Part 4 — Cleanup
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restricted-app
+spec:
+  securityContext:
+    seccompProfile:
+      type: Localhost
+      localhostProfile: profiles/deny-network.json
+    appArmorProfile:
+      type: Localhost
+      localhostProfile: k8s-deny-network
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sleep", "3600"]
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+```
+
+This layers:
+- **seccomp** ? blocks the syscalls needed to open sockets
+- **AppArmor** ? blocks network mediation + filesystem/mount/ptrace paths
+- **capabilities: drop ALL** + **allowPrivilegeEscalation: false** ? standard
+  CKS baseline hardening you should reflexively add to every restricted pod
+
+ ---
+
+
+
+## Part 4 — Cluster-wide Enforcement (Bonus, PSA-adjacent)
+
+To make these profiles mandatory rather than opt-in per pod, CKS may test
+**Pod Security Admission (PSA)** or an admission webhook / OPA Gatekeeper
+constraint that rejects pods missing a seccomp profile. Quick PSA reminder:
+
+```bash
+kubectl label ns restricted-ns pod-security.kubernetes.io/enforce=restricted
+```
+
+The `restricted` PSS profile **requires** `seccompProfile.type` to be
+`RuntimeDefault` or `Localhost` — pods without one are rejected. This is a
+fast way to fail-closed at the namespace level instead of hoping every pod
+spec remembers to set it.
+
+```bash
+# Test: this should be rejected because it has no seccompProfile
+kubectl run no-seccomp --image=busybox -n restricted-ns -- sleep 3600
+kubectl get events -n restricted-ns --field-selector reason=FailedCreate
+```
+
+---
+
+
+## Part 5 — Cleanup
 
 ```bash
 kubectl delete ns seccomp-lab
@@ -321,7 +429,7 @@ sudo rm -f /var/lib/kubelet/seccomp/profiles/audit.json /var/lib/kubelet/seccomp
 ```
 
 
-# Part A — Restrict Service Exposure
+# Part B — Restrict Service Exposure
 
 ## Lab 1 — Create Namespace
 
