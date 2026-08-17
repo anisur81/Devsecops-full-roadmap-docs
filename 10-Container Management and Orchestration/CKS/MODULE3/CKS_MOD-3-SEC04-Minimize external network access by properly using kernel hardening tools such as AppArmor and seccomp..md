@@ -1,26 +1,44 @@
 
-# Part A- Kernel Hardening with AppArmor and seccomp
+# Kernel Hardening with AppArmor and seccomp
 
-Goal: Restrict a container's ability to make outbound network calls (and reduce its syscall attack surface) using AppArmor mandatory access control and seccomp syscall filtering — two host-level kernel hardening tools frequently tested on CKS..
+Goal: Restrict a container's ability to make outbound network calls (and reduce its syscall attack surface) using AppArmor mandatory access control and seccomp syscall filtering.
 
 
-## 0. Prerequisites
+## 0. Kubernetes prerequisites
 
-- A running kubelet node where you have root/sudo access (kubeadm cluster,
-  minikube with `--driver=none`/vm driver, or a KillerCoda/killer.sh style CKS
-  simulator). AppArmor profiles are **node-local** — loaded on the node, not
-  distributed by Kubernetes.
-- Node OS must support AppArmor (Ubuntu/Debian do by default; check with
-  `sudo aa-status`). If AppArmor isn't available, skip to Part 2 (seccomp is
-  supported on virtually all modern Linux kernels).
-- `kubectl` context pointed at your test cluster.
-
+- A working Kubernetes cluster.
+- Linux worker nodes — both Seccomp and AppArmor are Linux-node security features.
+- kubectl configured with sufficient permissions.
+- A CRI-compatible runtime such as containerd or CRI-O. Kubernetes documents containerd as supporting AppArmor.
+- Kubelet running normally.
+  
+### Initial sanity checks for a CKS AppArmor + Seccomp lab.
 ```bash
-# Quick sanity checks
-sudo aa-status                 # AppArmor loaded profiles / enforce mode
-uname -r                       # kernel version (seccomp needs kernel >= 3.5, standard today)
+# 1. Check AppArmor
+sudo aa-status
+
+# 2. Check Linux kernel
+uname -r
+
+# 3. Check Kubernetes nodes
 kubectl get nodes -o wide
 
+# 4. Check AppArmor kernel support
+cat /sys/module/apparmor/parameters/enabled
+
+# 5. Check Seccomp kernel support
+grep -E 'CONFIG_SECCOMP|CONFIG_SECCOMP_FILTER' /boot/config-$(uname -r)
+
+# 6. Check container runtime
+containerd --version
+runc --version
+
+# 7. Check kubelet
+systemctl is-active kubelet
+
+# 8. Check AppArmor profiles currently loaded
+sudo cat /sys/kernel/security/apparmor/profiles
+```
 ---
 
 ## Part 1 — seccomp
