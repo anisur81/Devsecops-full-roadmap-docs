@@ -410,7 +410,7 @@ EOF
 ```
 
 
-**Step 3 — Load it into the kernel:**
+**Step 4 — Load it into the kernel:**
 
 ```bash
 sudo apparmor_parser /etc/apparmor.d/k8s-deny-write
@@ -425,7 +425,7 @@ sudo apparmor_parser -r -W /etc/apparmor.d/k8s-deny-network
 sudo aa-status | grep k8s-deny-network
 
 ```
-Repeat Step 1.1–1.2 on every node in the cluster (or use a DaemonSet / config-management tool in real life).
+Repeat Step 2,3 and 4 on every node in the cluster.
 
 **Step 4a — Reference it from a Pod (Kubernetes 1.30+, native field):**
 
@@ -447,11 +447,37 @@ spec:
         localhostProfile: k8s-deny-write
 ```
 
- 
 
 ```bash
 kubectl apply -f pod-apparmor-native.yaml
 kubectl get pod aa-deny-write -n seccomp-lab
+```
+
+
+**Step 4b — Reference it from a Pod (Kubernetes 1.30+, native field):**
+
+```yaml
+# pod-apparmor-net-test.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: aa-apparmor-net-test
+  namespace: seccomp-lab
+spec:
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sh", "-c", "sleep 3600"]
+    securityContext:
+      appArmorProfile:
+        type: Localhost
+        localhostProfile: k8s-deny-network
+```
+
+
+```bash
+kubectl apply -f pod-apparmor-net-test.yaml
+kubectl get pod aa-apparmor-net-test -n seccomp-lab
 ```
 
 **Step 5 — Prove the restriction works:**
@@ -465,11 +491,14 @@ echo "test" > /tmp/testfile
 
 or
 
-kubectl exec -it apparmor-net-test -- wget -T 3 http://example.com
+kubectl exec -it aa-apparmor-net-test -- wget -T 3 http://example.com
 # Expect: connection refused / permission denied — network denied by AppArmor
 
-kubectl exec -it apparmor-net-test -- ping -c1 8.8.8.8
+kubectl exec -it aa-apparmor-net-test -- ping -c1 8.8.8.8
 # Expect: Operation not permitted
+PING 8.8.8.8 (8.8.8.8): 56 data bytes
+ping: can't create raw socket: Permission denied
+command terminated with exit code 1
 
 Check the kernel audit log on the node to confirm AppArmor is the one blocking it:
 
