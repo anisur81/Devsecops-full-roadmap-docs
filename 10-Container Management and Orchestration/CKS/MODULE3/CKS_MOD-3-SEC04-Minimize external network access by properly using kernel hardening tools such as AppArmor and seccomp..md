@@ -83,23 +83,149 @@ kubectl get pod sc-runtimedefault -n seccomp-lab -o jsonpath='{.spec.securityCon
 
 ### 1.3 Lab: Build and apply a custom (`Localhost`) profile
 
-Custom profiles let you **deny specific syscalls** — e.g., block `unshare` (used for namespace-based container escapes) while allowing everything else.
+Custom profiles let you **deny specific syscalls** — e.g., block `unshare`, `setns` etc  while allowing everything else.
 
 **Step 1 — Create the profile on every node** (in the exam, this is usually just the single node, but note it must exist on whichever node the pod schedules to):
 
 ```bash
-sudo mkdir -p /var/lib/kubelet/seccomp/profiles
+sudo mkdir -p /var/lib/kubelet/seccomp/
 ```
+```
+sudo vi /var/lib/kubelet/seccomp/deny-cis-based.json
+
+{
+  "defaultAction": "SCMP_ACT_ALLOW",
+  "architectures": ["SCMP_ARCH_X86_64"],
+  "syscalls": [
+    {
+      "comment": "Kernel module manipulation — container breakout / persistence",
+      "names": ["init_module", "finit_module", "delete_module", "create_module"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "Namespace manipulation — privilege escalation, breakout",
+      "names": ["unshare", "setns"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "Mount namespace tampering",
+      "names": ["mount", "umount2", "pivot_root", "chroot"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "Process tracing / debugging — credential theft, injection",
+      "names": ["ptrace", "process_vm_readv", "process_vm_writev"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "Kernel keyring — credential/secret exfiltration vector",
+      "names": ["add_key", "request_key", "keyctl"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "System state / host control — never needed by app containers",
+      "names": ["reboot", "kexec_load", "kexec_file_load", "swapon", "swapoff"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "BPF — kernel exploitation surface, container escape research",
+      "names": ["bpf"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "Kernel/CPU tunables — side-channel or perf-based attacks",
+      "names": ["perf_event_open"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "Time/clock tampering — can break logging, auth tokens, TLS validation",
+      "names": ["clock_settime", "clock_adjtime", "adjtimex", "settimeofday", "stime"],
+      "action": "SCMP_ACT_ERRNO"
+    },
+    {
+      "comment": "Legacy/uncommon syscalls with history of kernel vulnerabilities",
+      "names": ["acct", "vm86", "vm86old", "modify_ldt", "iopl", "ioperm", "syslog"],
+      "action": "SCMP_ACT_ERRNO"
+    }
+  ]
+}
+
+```
+### Create the pod using the following yaml file
+```
+# vi  pod-seccomp-deny-cis.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sc-deny-cis-based
+  namespace: seccomp-lab
+spec:
+  securityContext:
+    seccompProfile:
+      type: Localhost
+      localhostProfile: deny-cis-based.json
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sh", "-c", "sleep 3600"]
+```
+# kubectl apply -f /var/lib/kubelet/seccomp/deny-cis-based.json
+# kubectl get pods -n seccop-lab
+
+### Seccomp audit/logging profile
 
 ```json
-// /var/lib/kubelet/seccomp/profiles/audit.json
+# sudo vi /var/lib/kubelet/seccomp/audit.json
 {
   "defaultAction": "SCMP_ACT_LOG"
 }
 ```
 
+Yaml file for the audit profile
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: seccomp-audit
+spec:
+  securityContext:
+    seccompProfile:
+      type: Localhost
+      localhostProfile: audit.json
+
+  containers:
+  - name: app
+    image: busybox:1.36
+    command:
+    - sh
+    - -c
+    - sleep 3600
+```
+# kubectl apply -f seccomp-audit.yaml
+# kubectl get pod seccomp-audit -n seccomp-lab
+
+
+For your CKS practice, a good progression is:
+
+```
+SCMP_ACT_LOG
+     ↓
+Observe syscalls
+     ↓
+Identify unnecessary/dangerous syscalls
+     ↓
+Create restrictive profile
+     ↓
+SCMP_ACT_ERRNO
+     ↓
+Test violation
+```
+
+### Deny-by-default Seccomp profile
+
 ```json
-// /var/lib/kubelet/seccomp/profiles/violation.json
+# sudo vi /var/lib/kubelet/seccomp/violation.json
 {
   "defaultAction": "SCMP_ACT_ERRNO",
   "architectures": ["SCMP_ARCH_X86_64"],
@@ -119,6 +245,7 @@ sudo mkdir -p /var/lib/kubelet/seccomp/profiles
     }
   ]
 }
+
 ```
 #### A good "deny network, allow everything else" pattern for the exam:
 ```
