@@ -366,7 +366,7 @@ uname -r                       # kernel version (seccomp needs kernel >= 3.5, st
 kubectl get nodes -o wide
 ```
 
-**Step 2 — Write a profile that denies all file writes:**
+**Step 2 — Create an AppArmor profile that prevents writing to files:**
 
 ```bash
 sudo tee /etc/apparmor.d/k8s-deny-write <<'EOF'
@@ -381,9 +381,10 @@ profile k8s-deny-write flags=(attach_disconnected) {
 }
 EOF
 ```
-### OR
-## Create the profile on every node that will run the workload:
 
+**Step3: Create an AppArmor profile that prevents network access:**
+
+```
 sudo tee /etc/apparmor.d/k8s-deny-network <<'EOF'
 #include <tunables/global>
 
@@ -413,6 +414,7 @@ EOF
 
 ```bash
 sudo apparmor_parser /etc/apparmor.d/k8s-deny-write
+# Verify it loaded
 sudo aa-status | grep k8s-deny-write
 
 or
