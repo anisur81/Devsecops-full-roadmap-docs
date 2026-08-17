@@ -83,9 +83,8 @@ kubectl get pod sc-runtimedefault -n seccomp-lab -o jsonpath='{.spec.securityCon
 
 ### 1.3 Lab: Build and apply a custom (`Localhost`) profile
 
-Custom profiles let you **deny specific syscalls** — e.g., block `unshare`, `setns` etc  while allowing everything else.
 
-**Step 1 — Create the profile on every node** (in the exam, this is usually just the single node, but note it must exist on whichever node the pod schedules to):
+**Step 1 — Create the profile on every node Custom profiles let you Deny specific syscalls — e.g., block `unshare`, `setns` etc  while allowing everything else.**
 
 ```bash
 sudo mkdir -p /var/lib/kubelet/seccomp/
@@ -150,7 +149,33 @@ sudo vi /var/lib/kubelet/seccomp/deny-cis-based.json
   ]
 }
 
+
 ```
+### Create the yaml file for the above profile
+
+```
+pod-seccomp-deny-cis.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sc-deny-cis-based
+  namespace: seccomp-lab
+spec:
+  securityContext:
+    seccompProfile:
+      type: Localhost
+      localhostProfile: deny-cis-based.json
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sh", "-c", "sleep 3600"]
+
+```
+```
+# kubectl apply -f /var/lib/kubelet/seccomp/deny-cis-based.json
+# kubectl get pods -n seccop-lab
+```
+
 ### Create the pod using the following yaml file
 ```
 # vi  pod-seccomp-deny-cis.yaml
@@ -169,8 +194,12 @@ spec:
     image: busybox:1.36
     command: ["sh", "-c", "sleep 3600"]
 ```
+```
 # kubectl apply -f /var/lib/kubelet/seccomp/deny-cis-based.json
 # kubectl get pods -n seccop-lab
+```
+
+**Step 2 — Create the profile on every node Custom profiles let you Dobserve syscall activity before creating a restrictive profile.**
 
 ### Seccomp audit/logging profile
 
@@ -202,9 +231,11 @@ spec:
     - -c
     - sleep 3600
 ```
+
+```
 # kubectl apply -f seccomp-audit.yaml
 # kubectl get pod seccomp-audit -n seccomp-lab
-
+```
 
 For your CKS practice, a good progression is:
 
@@ -221,11 +252,12 @@ SCMP_ACT_ERRNO
      ↓
 Test violation
 ```
+**Step 3 — Create the Custom Seccomp Profile on Every Kubernetes Node (Deny by Default).**
 
 ### Deny-by-default Seccomp profile
 
 ```json
-# sudo vi /var/lib/kubelet/seccomp/violation.json
+# sudo vi /var/lib/kubelet/seccomp/deny-default.json
 {
   "defaultAction": "SCMP_ACT_ERRNO",
   "architectures": ["SCMP_ARCH_X86_64"],
@@ -247,41 +279,11 @@ Test violation
 }
 
 ```
-#### A good "deny network, allow everything else" pattern for the exam:
-```
-sudo tee /var/lib/kubelet/seccomp/profiles/deny-network.json <<'EOF'
-{
-  "defaultAction": "SCMP_ACT_ALLOW",
-  "syscalls": [
-    {
-      "names": [
-        "socket",
-        "connect",
-        "accept",
-        "accept4",
-        "bind",
-        "listen",
-        "sendto",
-        "sendmsg",
-        "recvfrom",
-        "recvmsg"
-      ],
-      "action": "SCMP_ACT_ERRNO"
-    }
-  ]
-}
-EOF
+
+Create the yaml file for the deny default profile
 
 ```
-
-
-
-> `violation.json` is deliberately restrictive: it will **block `unshare`**, `mount`, `ptrace`, etc. because they're not in the allow-list, forcing `SCMP_ACT_ERRNO` (syscall fails with an error) instead of `SCMP_ACT_LOG` (just logs).
-
-**Step 2 — Reference it from a Pod:**
-
-```yaml
-# pod-seccomp-violation.yaml
+# sudo vi pod-seccomp-deny-default.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -291,19 +293,19 @@ spec:
   securityContext:
     seccompProfile:
       type: Localhost
-      localhostProfile: violation.json
+      localhostProfile: deny-default.json
   containers:
   - name: app
     image: busybox:1.36
     command: ["sh", "-c", "sleep 3600"]
-```
 
-```bash
-kubectl apply -f pod-seccomp-violation.yaml
-kubectl get pod sc-violation -n seccomp-lab
 ```
+```
+# kubectl apply -f seccomp-deny-default.yaml
+# kubectl get pod seccomp-deny-default -n seccomp-lab
 
-**Step 3 — Prove the restriction works:**
+```
+**Step 4 — Prove the restriction works:**
 
 ```bash
 kubectl exec -it sc-violation -n seccomp-lab -- sh
@@ -318,11 +320,7 @@ kubectl exec -it seccomp-net-test -- wget -T 3 http://example.com
 
 kubectl exec -it seccomp-net-test -- nslookup kubernetes.default
 # Expect: failure — DNS resolution needs socket() too
-
-
 ```
-
-Compare with the `audit.json` profile (logs to node's `dmesg`/audit log but doesn't block) to see the difference between **audit** and **enforce** modes — a common exam distinction.
 
 ### 1.4 Quick verification commands (exam speed tips)
 
