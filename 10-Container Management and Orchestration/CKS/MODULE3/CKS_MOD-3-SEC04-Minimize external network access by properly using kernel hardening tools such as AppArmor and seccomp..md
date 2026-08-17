@@ -343,7 +343,6 @@ kubectl describe pod <pod> | grep -A5 "Security Context"
 sudo journalctl -k | grep -Ei "apparmor|seccomp|audit"
 
 ```
-
 ---
 
 ## Part 2 — AppArmor
@@ -354,7 +353,7 @@ sudo journalctl -k | grep -Ei "apparmor|seccomp|audit"
 - Only works on nodes with AppArmor support (Ubuntu/Debian ship it by default; check with `sudo aa-status` or `cat /sys/module/apparmor/parameters/enabled`).
 - As of Kubernetes **1.30**, AppArmor is set via **`securityContext.appArmorProfile`** field (GA). On older clusters (pre-1.30 / pre-1.4 beta), it used the annotation `container.apparmor.security.beta.kubernetes.io/<container-name>: <profile-ref>` — **know both for the exam**, since exam cluster versions vary.
 - Profile must be **loaded into the kernel on the node first** (`apparmor_parser`) — Kubernetes does not distribute AppArmor profiles for you.
-- `type` values (1.30+ field): `RuntimeDefault`, `Localhost` (with `localhostProfile: <name>`), `Unconfined`.
+- `type` values (1.30+): `RuntimeDefault`, `Localhost` (with `localhostProfile: <name>`), `Unconfined`.
 
 ### 2.2 Lab: Write, load, and verify an AppArmor profile
 
